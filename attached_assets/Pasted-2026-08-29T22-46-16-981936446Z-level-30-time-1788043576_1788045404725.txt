@@ -1,0 +1,50 @@
+2026-08-29T22:46:16.981936446Z {"level":30,"time":1788043576981,"pid":83,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5f68668c66-pmd2v","msg":"Tech blook typo rename checked"}
+2026-08-29T22:46:17.017602753Z ==> Your service is live 🎉
+2026-08-29T22:46:17.034948692Z {"level":30,"time":1788043576983,"pid":83,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5f68668c66-pmd2v","msg":"Monitor blook rename checked"}
+2026-08-29T22:46:17.036024256Z {"level":30,"time":1788043576983,"pid":83,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5f68668c66-pmd2v","msg":"Custom avatar backfill checked"}
+2026-08-29T22:46:17.084046084Z {"level":30,"time":1788043577083,"pid":83,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5f68668c66-pmd2v","msg":"Unpulled 1k cleanup checked"}
+2026-08-29T22:46:17.085916796Z {"level":50,"time":1788043577085,"pid":83,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5f68668c66-pmd2v","err":{"type":"Error","message":"Missing Replit environment variables. Ensure the Stripe integration is connected via the Integrations tab.","stack":"Error: Missing Replit environment variables. Ensure the Stripe integration is connected via the Integrations tab.\n    at getStripeCredentials (/opt/render/project/src/artifacts/api-server/src/lib/stripeClient.ts:32:11)\n    at getStripeSync (/opt/render/project/src/artifacts/api-server/src/lib/stripeClient.ts:90:46)\n    at initStripe (/opt/render/project/src/artifacts/api-server/src/index.ts:143:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"},"msg":"Stripe initialization failed"}
+2026-08-29T22:46:17.109404604Z ==> 
+2026-08-29T22:46:17.120245193Z ==> ///////////////////////////////////////////////////////////
+2026-08-29T22:46:17.125642928Z ==> 
+2026-08-29T22:46:17.13940747Z {"level":30,"time":1788043577139,"pid":83,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5f68668c66-pmd2v","req":{"id":2,"method":"GET","url":"/"},"res":{"statusCode":404},"responseTime":2,"msg":"request completed"}
+2026-08-29T22:46:17.140081904Z ==> Available at your primary URL https://cloaket.onrender.com
+2026-08-29T22:46:17.171568645Z ==> 
+2026-08-29T22:46:17.189555456Z ==> ///////////////////////////////////////////////////////////
+2026-08-29T22:51:21.09420536Z ==> Detected service running on port 10000
+2026-08-29T22:51:21.189484095Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+2026-08-29T22:56:13.426590829Z [store] failed to list Stripe sessions, falling back to synced data: Error: Missing Replit environment variables. Ensure the Stripe integration is connected via the Integrations tab.
+2026-08-29T22:56:13.426623341Z     at getStripeCredentials (/opt/render/project/src/artifacts/api-server/src/lib/stripeClient.ts:32:11)
+2026-08-29T22:56:13.426628371Z     at getUncachableStripeClient (/opt/render/project/src/artifacts/api-server/src/lib/stripeClient.ts:76:31)
+2026-08-29T22:56:13.426633092Z     at fulfillUnclaimedPurchases (/opt/render/project/src/artifacts/api-server/src/routes/store.ts:103:26)
+2026-08-29T22:56:13.426637882Z     at Timeout.sweepPurchases (/opt/render/project/src/artifacts/api-server/src/index.ts:379:5)
+2026-08-29T22:56:13.426642762Z     at listOnTimeout (node:internal/timers:605:17)
+2026-08-29T22:56:13.426646842Z     at process.processTimers (node:internal/timers:541:7)
+2026-08-29T23:01:17.231091981Z /opt/render/project/src/artifacts/api-server:
+2026-08-29T23:01:17.231127653Z  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+2026-08-29T23:01:17.231133833Z Command failed with signal "SIGTERM"
+2026-08-29T23:16:21.053160105Z     at fulfillUnclaimedPurchases (/opt/render/project/src/artifacts/api-server/src/routes/store.ts:103:26)
+2026-08-29T23:16:21.053163095Z     at sweepPurchases (/opt/render/project/src/artifacts/api-server/src/index.ts:379:5)
+2026-08-29T23:16:21.053165416Z     at Server.<anonymous> (/opt/render/project/src/artifacts/api-server/src/index.ts:384:3)
+2026-08-29T23:16:21.053167705Z     at Server.f (/opt/render/project/src/node_modules/.pnpm/once@1.4.0/node_modules/once/once.js:25:25)
+2026-08-29T23:16:21.053170636Z     at Object.onceWrapper (node:events:622:28)
+2026-08-29T23:16:21.053173036Z     at Server.emit (node:events:520:35)
+2026-08-29T23:16:21.053175276Z     at emitListeningNT (node:net:1991:10)
+2026-08-29T23:16:21.053186706Z     at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+2026-08-29T23:16:21.053891205Z {"level":30,"time":1788045377758,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","msg":"Initializing Stripe schema..."}
+2026-08-29T23:16:21.053908235Z {"level":30,"time":1788045377950,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","msg":"Discord bot not started: maintenance mode"}
+2026-08-29T23:16:21.148871948Z {"level":30,"time":1788045381148,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","cleared":0,"msg":"Datacenter last_ip sweep done"}
+2026-08-29T23:16:21.183753272Z {"level":30,"time":1788045381183,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","awarded":0,"msg":"Starter Bundle badge sync done"}
+2026-08-29T23:16:21.284272892Z {"level":30,"time":1788045381284,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","upgraded":0,"msg":"Bundle upgrade sweep done"}
+2026-08-29T23:16:21.285445334Z {"level":30,"time":1788045381285,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","awarded":0,"revoked":0,"threshold":172,"msg":"Collector badge sweep done"}
+2026-08-29T23:16:21.38577985Z {"level":30,"time":1788045381385,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","fixed":0,"msg":"Negative token sweep done"}
+2026-08-29T23:16:21.481451621Z {"level":30,"time":1788045381481,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","msg":"Custom avatar backfill checked"}
+2026-08-29T23:16:21.482103039Z {"level":30,"time":1788045381481,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","msg":"Unpulled 1k cleanup checked"}
+2026-08-29T23:16:21.583546795Z {"level":30,"time":1788045381583,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","msg":"Monitor blook rename checked"}
+2026-08-29T23:16:21.58525661Z {"level":30,"time":1788045381585,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","updated":0,"failed":0,"msg":"Base worker rate sweep done"}
+2026-08-29T23:16:21.683456539Z {"level":30,"time":1788045381683,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","msg":"Tech blook typo rename checked"}
+2026-08-29T23:16:21.725996808Z {"level":50,"time":1788045381725,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","err":{"type":"Error","message":"Missing Replit environment variables. Ensure the Stripe integration is connected via the Integrations tab.","stack":"Error: Missing Replit environment variables. Ensure the Stripe integration is connected via the Integrations tab.\n    at getStripeCredentials (/opt/render/project/src/artifacts/api-server/src/lib/stripeClient.ts:32:11)\n    at getStripeSync (/opt/render/project/src/artifacts/api-server/src/lib/stripeClient.ts:90:46)\n    at initStripe (/opt/render/project/src/artifacts/api-server/src/index.ts:143:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"},"msg":"Stripe initialization failed"}
+2026-08-29T23:16:21.783309972Z {"level":30,"time":1788045381783,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","status":"armed-waiting","windowPulls":0,"msg":"Hack repair sweep checked"}
+2026-08-29T23:16:22.856136223Z {"level":30,"time":1788045382855,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","req":{"id":1,"method":"GET","url":"/favicon.ico"},"res":{"statusCode":404},"responseTime":4,"msg":"request completed"}
+2026-08-29T23:16:22.857339816Z {"level":30,"time":1788045382857,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","req":{"id":2,"method":"HEAD","url":"/"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-08-29T23:16:22.973486315Z {"level":30,"time":1788045382973,"pid":65,"hostname":"srv-da9ln99f2nfc73fu4qrg-hibernate-5b695f749-p27sx","req":{"id":3,"method":"GET","url":"/"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}

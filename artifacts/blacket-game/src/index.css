@@ -1,0 +1,210 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 4px);
+  --radius-3xl: calc(var(--radius) + 6px);
+}
+
+:root {
+  --background: 230 25% 8%;
+  --foreground: 210 40% 98%;
+  --card: 230 25% 12%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 230 25% 18%;
+  --popover: 230 25% 12%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 230 25% 18%;
+  --primary: 260 80% 65%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 230 25% 18%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 230 25% 16%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 280 80% 60%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 350 80% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 230 25% 20%;
+  --input: 230 25% 20%;
+  --ring: 260 80% 65%;
+
+  --app-font-sans: 'Nunito', sans-serif;
+  --app-font-display: 'Titan One', sans-serif;
+  --radius: 0.4rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans font-bold antialiased bg-background text-foreground selection:bg-primary/30;
+  }
+  /* Everything not in Titan One should read bold: raise lighter weight
+     utilities to at least 700. Extra specificity so this beats Tailwind's
+     own utility classes. (Titan One has a single 400 weight, and
+     .font-display re-asserts its own weight, so display text is unaffected.) */
+  body :is(.font-light, .font-normal, .font-medium, .font-semibold) {
+    font-weight: 700;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-wide font-normal;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--app-font-display);
+    font-weight: 400;
+  }
+  
+  .bg-checkerboard {
+    background-color: hsl(var(--background));
+    background-image: repeating-conic-gradient(hsl(var(--secondary) / 0.4) 0% 25%, transparent 0% 50%);
+    background-size: 48px 48px;
+  }
+
+  @keyframes text-rainbow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: -200% 50%; }
+  }
+  .text-rainbow {
+    background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: text-rainbow 4s linear infinite;
+  }
+  
+  @keyframes text-golden {
+    0% { background-position: 0% 50%; }
+    100% { background-position: -200% 50%; }
+  }
+  .text-golden {
+    background-image: linear-gradient(to right, #f5c518, #ffe9a3, #d4a017, #fff3b0, #f5c518);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: text-golden 3s linear infinite;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+  .box-glow {
+    box-shadow: 0 0 15px currentColor;
+  }
+  .box-glow-inner {
+    box-shadow: inset 0 0 15px currentColor;
+  }
+  .box-glow-both {
+    box-shadow: 0 0 15px currentColor, inset 0 0 15px currentColor;
+  }
+  
+  /* Rarity animations */
+  @keyframes rainbow {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+  .animate-rainbow {
+    animation: rainbow 3s linear infinite;
+  }
+  
+  /* Uses drop-shadow (follows the image's actual shape) instead of
+     box-shadow, which drew a rectangular box around the whole element. */
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 15px currentColor); }
+    50% { filter: drop-shadow(0 0 30px currentColor); }
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Hide scrollbars */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+@layer utilities {
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes blook-float {
+    0%, 100% { transform: translateY(4%); }
+    50% { transform: translateY(-6%); }
+  }
+  .animate-blook-float {
+    animation: blook-float 2.2s ease-in-out infinite;
+  }
+  
+  @keyframes bg-drift {
+    0% { background-position: 0px 0px; }
+    100% { background-position: 48px 48px; }
+  }
+  .animate-bg-drift {
+    animation: bg-drift 4s linear infinite;
+  }
+}
+
+@layer utilities {
+  @keyframes shine {
+    to {
+      background-position: 200% center;
+    }
+  }
+  .animate-shine {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background-size: 200% auto;
+    animation: shine 2s linear infinite;
+  }
+}

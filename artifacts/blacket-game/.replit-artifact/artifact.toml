@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Blacket"
+version = "1.0.0"
+id = "artifacts/blacket-game"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18170
+
+[services.development]
+run = "pnpm --filter @workspace/blacket-game run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/blacket-game", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/blacket-game/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18170"
+BASE_PATH = "/"

@@ -1,0 +1,5238 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Blacket-style game API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: player
+  - name: blooks
+  - name: packs
+  - name: bazaar
+  - name: chat
+  - name: social
+  - name: trades
+  - name: blookgen
+  - name: coowner
+paths:
+  /blookgen/generate:
+    post:
+      operationId: generateBlook
+      tags: [blookgen]
+      summary: Generate a custom blook image from a description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlookGenInput"
+      responses:
+        "200":
+          description: Generated blook image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedBlook"
+        "400":
+          description: Invalid description
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "500":
+          description: Generation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /me:
+    get:
+      operationId: getMe
+      tags: [player]
+      summary: Get current player profile
+      responses:
+        "200":
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+    patch:
+      operationId: updateMe
+      tags: [player]
+      summary: Update player settings (avatar blook, banner color)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerUpdate"
+      responses:
+        "200":
+          description: Updated player
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "400":
+          description: Invalid update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /me/claim:
+    post:
+      operationId: claimTokens
+      tags: [player]
+      summary: Claim the timed token reward
+      responses:
+        "200":
+          description: Claim result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimResult"
+        "400":
+          description: Claim not ready yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimResult"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Create an account with a username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "400":
+          description: Invalid input or username taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Registration blocked (IP ban)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in with a username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Wrong username or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Account is banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change your password (requires the current password)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid new password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong current password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /friends:
+    get:
+      operationId: getFriends
+      tags: [friends]
+      summary: List friends and pending friend requests
+      responses:
+        "200":
+          description: Friends overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FriendsOverview"
+  /friends/requests:
+    post:
+      operationId: sendFriendRequest
+      tags: [friends]
+      summary: Send a friend request by username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FriendRequestInput"
+      responses:
+        "200":
+          description: Request sent (or auto-accepted if they already asked you)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FriendRequestResult"
+        "400":
+          description: Invalid target
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /friends/requests/{id}/accept:
+    post:
+      operationId: acceptFriendRequest
+      tags: [friends]
+      summary: Accept an incoming friend request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: No such pending request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /friends/requests/{id}/decline:
+    post:
+      operationId: declineFriendRequest
+      tags: [friends]
+      summary: Decline (or cancel) a pending friend request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Declined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: No such pending request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /friends/{username}:
+    delete:
+      operationId: removeFriend
+      tags: [friends]
+      summary: Remove a friend
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Not friends
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /gifts/send:
+    post:
+      operationId: sendGift
+      tags: [friends]
+      summary: Send a one-way gift (tokens and/or blooks) to another player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GiftSendInput"
+      responses:
+        "200":
+          description: Gift delivered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid gift
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /dms/conversations:
+    get:
+      operationId: getDmConversations
+      tags: [dms]
+      summary: List DM conversations (latest message per partner)
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DmConversation"
+                required: [conversations]
+  /dms/with/{username}:
+    get:
+      operationId: getDmThread
+      tags: [dms]
+      summary: Get the DM thread with a player (marks it read)
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DmThread"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    post:
+      operationId: sendDm
+      tags: [dms]
+      summary: Send a DM (optionally gifting a blook from your collection)
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DmInput"
+      responses:
+        "200":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DmMessage"
+        "400":
+          description: Empty message / blook not owned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /dms/messages/{id}/claim:
+    post:
+      operationId: claimDmGift
+      tags: [dms]
+      summary: Claim a blook gift sent to you
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Claimed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  blookName: { type: string }
+                  image: { type: string }
+                required: [message, blookName, image]
+        "404":
+          description: No unclaimed gift for you with that id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /discord-link:
+    get:
+      operationId: getDiscordLink
+      tags: [social]
+      summary: Get the public Discord invite link
+      responses:
+        "200":
+          description: Discord invite link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscordLink"
+  /admin/discord-link:
+    post:
+      operationId: adminSetDiscordLink
+      tags: [admin]
+      summary: Update the public Discord invite link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminDiscordLinkInput"
+      responses:
+        "200":
+          description: Updated Discord invite link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscordLink"
+        "400":
+          description: Invalid Discord invite link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/lookup:
+    post:
+      operationId: adminLookup
+      tags: [admin]
+      summary: Verify the admin password and fetch grantable badges/blooks/players
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminAuthInput"
+      responses:
+        "200":
+          description: Admin data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLookup"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/grant-badge:
+    post:
+      operationId: adminGrantBadge
+      tags: [admin]
+      summary: Grant a badge to a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGrantBadgeInput"
+      responses:
+        "200":
+          description: Badge granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantBadgeResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player or badge not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/grant-blook:
+    post:
+      operationId: adminGrantBlook
+      tags: [admin]
+      summary: Request an owner-approved blook grant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGrantBlookInput"
+      responses:
+        "200":
+          description: Blook grant request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantBlookResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/grant-mod:
+    post:
+      operationId: adminGrantMod
+      tags: [admin]
+      summary: Grant a player the Mod badge and mod-panel access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGrantModInput"
+      responses:
+        "200":
+          description: Mod access granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantModResult"
+        "400":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player or blook not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/update-badges:
+    post:
+      operationId: adminUpdateBadges
+      tags: [admin]
+      summary: Add and/or remove multiple badges on a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateBadgesInput"
+      responses:
+        "200":
+          description: Badges updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantBadgeResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player or badge not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/rename-player:
+    post:
+      operationId: adminRenamePlayer
+      tags: [admin]
+      summary: Rename a player to a new username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminRenamePlayerInput"
+      responses:
+        "200":
+          description: Player renamed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminRenamePlayerResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: New username already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/reset-password:
+    post:
+      operationId: adminResetPassword
+      tags: [admin]
+      summary: Reset a player's password to a random 4-digit code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminResetPasswordInput"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminResetPasswordResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/set-name-effect:
+    post:
+      operationId: adminSetNameEffect
+      tags: [admin]
+      summary: Set or clear a player's username effect (e.g. rainbow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSetNameEffectInput"
+      responses:
+        "200":
+          description: Name effect updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSetNameEffectResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/gift-all-blooks:
+    post:
+      operationId: adminGiftAllBlooks
+      tags: [admin]
+      summary: Gift N copies of every blook in the game to a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGiftAllBlooksInput"
+      responses:
+        "200":
+          description: Blooks gifted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGiftAllBlooksResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/delete-players:
+    post:
+      operationId: adminDeletePlayers
+      tags: [admin]
+      summary: Permanently delete players and all their data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminDeletePlayersInput"
+      responses:
+        "200":
+          description: Players deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDeletePlayersResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/purge-link-messages:
+    post:
+      operationId: adminPurgeLinkMessages
+      tags: [admin]
+      summary: Delete all chat messages containing links
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: Link messages purged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminPurgeLinkMessagesResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/give-tokens-all:
+    post:
+      operationId: adminGiveTokensAll
+      tags: [admin]
+      summary: Give tokens to every player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGiveTokensAllInput"
+      responses:
+        "200":
+          description: Tokens distributed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGiveTokensAllResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/give-tokens:
+    post:
+      operationId: adminGiveTokens
+      tags: [admin]
+      summary: Give tokens to a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGiveTokensInput"
+      responses:
+        "200":
+          description: Tokens given
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGiveTokensResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/grants:
+    post:
+      operationId: adminListGrants
+      tags: [admin]
+      summary: List all admin-granted starter bundles (who gave, who received)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: List of grants
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantList"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/grant-bundle:
+    post:
+      operationId: adminGrantBundle
+      tags: [admin]
+      summary: Request an owner-approved Starter Bundle grant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGrantBundleInput"
+      responses:
+        "200":
+          description: Starter Bundle grant request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantBundleResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/grant-requests:
+    post:
+      operationId: ownerListGrantRequests
+      tags: [owner]
+      summary: List pending blook and Starter Bundle approval requests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: Pending grant requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrantRequestList"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/grant-requests/approve:
+    post:
+      operationId: ownerApproveGrantRequest
+      tags: [owner]
+      summary: Approve and fulfill one pending grant request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerGrantRequestDecisionInput"
+      responses:
+        "200":
+          description: Approved request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrantRequest"
+        "400":
+          description: Request cannot be approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/grant-requests/reject:
+    post:
+      operationId: ownerRejectGrantRequest
+      tags: [owner]
+      summary: Reject one pending grant request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerGrantRequestDecisionInput"
+      responses:
+        "200":
+          description: Rejected request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrantRequest"
+        "400":
+          description: Request cannot be rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /coowner/lookup:
+    post:
+      operationId: coownerLookup
+      tags: [coowner]
+      summary: Verify the co-owner password and fetch reward-spawn data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoownerPasswordInput"
+      responses:
+        "200":
+          description: Co-owner reward data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLookup"
+        "401":
+          description: Wrong co-owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /coowner/grant-blook:
+    post:
+      operationId: coownerGrantBlook
+      tags: [coowner]
+      summary: Create a blook reward request for co-owner approval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGrantBlookInput"
+      responses:
+        "200":
+          description: Blook reward request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantBlookResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong co-owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player or blook not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /coowner/grant-bundle:
+    post:
+      operationId: coownerGrantBundle
+      tags: [coowner]
+      summary: Create a Starter Bundle reward request for co-owner approval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGrantBundleInput"
+      responses:
+        "200":
+          description: Starter Bundle reward request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminGrantBundleResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong co-owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /coowner/grant-requests:
+    post:
+      operationId: coownerListGrantRequests
+      tags: [coowner]
+      summary: List pending blook and Starter Bundle reward requests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoownerPasswordInput"
+      responses:
+        "200":
+          description: Pending reward requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrantRequestList"
+        "401":
+          description: Wrong co-owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /coowner/grant-requests/approve:
+    post:
+      operationId: coownerApproveGrantRequest
+      tags: [coowner]
+      summary: Approve and fulfill one pending reward request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoownerGrantRequestDecisionInput"
+      responses:
+        "200":
+          description: Approved request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrantRequest"
+        "400":
+          description: Request cannot be approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong co-owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /coowner/grant-requests/reject:
+    post:
+      operationId: coownerRejectGrantRequest
+      tags: [coowner]
+      summary: Reject one pending reward request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoownerGrantRequestDecisionInput"
+      responses:
+        "200":
+          description: Rejected request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrantRequest"
+        "400":
+          description: Request cannot be rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong co-owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/player-stats:
+    post:
+      operationId: adminPlayerStats
+      tags: [admin]
+      summary: Get total player count and who is online
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: Player stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminPlayerStatsResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/cleanup-catalog:
+    post:
+      operationId: adminCleanupCatalog
+      tags: [admin]
+      summary: Delete owned blooks, unlocks, listings, and avatars referencing blooks no longer in the catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: Cleanup result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCleanupCatalogResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/clear-chat:
+    post:
+      operationId: adminClearChat
+      tags: [admin]
+      summary: Delete all chat messages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: Chat cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClearResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/clear-bazaar:
+    post:
+      operationId: adminClearBazaar
+      tags: [admin]
+      summary: Delete all bazaar listings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: Bazaar cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClearResult"
+        "401":
+          description: Wrong admin password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/lookup:
+    post:
+      operationId: modLookup
+      tags: [mod]
+      summary: Authenticate a moderator and list players
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPasswordInput"
+      responses:
+        "200":
+          description: Player list for moderation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModLookupResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/ban:
+    post:
+      operationId: modBanPlayer
+      tags: [mod]
+      summary: Ban a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPlayerInput"
+      responses:
+        "200":
+          description: Player banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModBanResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/unban:
+    post:
+      operationId: modUnbanPlayer
+      tags: [mod]
+      summary: Unban a player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPlayerInput"
+      responses:
+        "200":
+          description: Player unbanned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModBanResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/clans:
+    post:
+      operationId: modListClans
+      tags: [mod]
+      summary: List all clans including banned ones (mod only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPasswordInput"
+      responses:
+        "200":
+          description: All clans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModClanInfo"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/clans/ban:
+    post:
+      operationId: modBanClan
+      tags: [mod]
+      summary: Ban a clan (hidden everywhere but recoverable)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModClanInput"
+      responses:
+        "200":
+          description: Clan banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModClanBanResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Clan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/clans/unban:
+    post:
+      operationId: modUnbanClan
+      tags: [mod]
+      summary: Unban a clan (fully restores it)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModClanInput"
+      responses:
+        "200":
+          description: Clan unbanned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModClanBanResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Clan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/set-verified:
+    post:
+      operationId: modSetVerified
+      tags: [mod]
+      summary: Grant or revoke the Verified badge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModSetVerifiedInput"
+      responses:
+        "200":
+          description: Verified badge updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModSetVerifiedResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/set-muted:
+    post:
+      operationId: modSetMuted
+      tags: [mod]
+      summary: Mute or unmute a player in chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModSetMutedInput"
+      responses:
+        "200":
+          description: Mute state updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModSetMutedResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/set-badge:
+    post:
+      operationId: modSetBadge
+      tags: [mod]
+      summary: Grant or revoke a mod-grantable badge (Verified or OG)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModSetBadgeInput"
+      responses:
+        "200":
+          description: Badge updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModSetVerifiedResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/chat:
+    post:
+      operationId: modListChat
+      tags: [mod]
+      summary: Spectate live chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPasswordInput"
+      responses:
+        "200":
+          description: Latest chat messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModChatResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/chat/delete:
+    post:
+      operationId: modDeleteChatMessage
+      tags: [mod]
+      summary: Delete a chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModDeleteMessageInput"
+      responses:
+        "200":
+          description: Message deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModDeleteMessageResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/delete-player-chat:
+    post:
+      operationId: modDeletePlayerChat
+      tags: [mod]
+      summary: Delete a player's entire chat history (global, clan, and trade messages)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPlayerInput"
+      responses:
+        "200":
+          description: Chat history deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModDeletePlayerChatResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/trades:
+    post:
+      operationId: modListTrades
+      tags: [mod]
+      summary: Spectate all live trades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPasswordInput"
+      responses:
+        "200":
+          description: All active trades
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModTradesResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/pulls:
+    post:
+      operationId: modListPulls
+      tags: [mod]
+      summary: Live feed of pack pulls, newest first (optionally filtered by blook or pack)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModListPullsInput"
+      responses:
+        "200":
+          description: Recent pack pulls
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModPullsResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/crafts:
+    post:
+      operationId: modListCrafts
+      tags: [mod]
+      summary: Live feed of crafts, newest first (optionally filtered by result blook)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModListCraftsInput"
+      responses:
+        "200":
+          description: Recent crafts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModCraftsResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /mod/player-trades:
+    post:
+      operationId: modPlayerTrades
+      tags: [mod]
+      summary: List a player's past trades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModPlayerInput"
+      responses:
+        "200":
+          description: All trades involving the player, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModTradesResult"
+        "401":
+          description: Wrong mod password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /players/{username}:
+    get:
+      operationId: getPlayerProfile
+      tags: [social]
+      summary: Get another player's public profile and stats
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicPlayer"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /craft/preview:
+    post:
+      operationId: craftPreview
+      tags: [player]
+      summary: Preview the 5 possible outcomes (with chances) for a combo of input blooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CraftPreviewInput"
+      responses:
+        "200":
+          description: Craft outcomes preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CraftPreview"
+        "400":
+          description: Invalid combo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /craft:
+    post:
+      operationId: craftBlooks
+      tags: [player]
+      summary: Consume the input blooks and instantly craft one of the 5 outcomes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CraftInput"
+      responses:
+        "200":
+          description: Craft result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CraftResult"
+        "400":
+          description: Invalid combo or not enough blooks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /me/blooks:
+    get:
+      operationId: getMyBlooks
+      tags: [player]
+      summary: Get owned blooks with quantities
+      responses:
+        "200":
+          description: Owned blooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OwnedBlook"
+  /me/blooks/sell:
+    post:
+      operationId: sellBlooks
+      tags: [player]
+      summary: Sell owned blooks for tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SellRequest"
+      responses:
+        "200":
+          description: Sale result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellResult"
+        "400":
+          description: Not enough blooks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /update-message:
+    get:
+      operationId: getUpdateMessage
+      tags: [player]
+      summary: Whether the current game-update announcement should be shown
+      responses:
+        "200":
+          description: Update message visibility
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateMessageStatus"
+  /base:
+    get:
+      operationId: getBase
+      tags: [player]
+      summary: Get the current Base, its workers, and server-calculated pending tokens
+      responses:
+        "200":
+          description: Base status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseStatus"
+  /base/workers:
+    post:
+      operationId: assignBaseWorker
+      tags: [player]
+      summary: Permanently assign owned blooks to Base miner jobs in one batch (level 5+)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaseWorkerInput"
+      responses:
+        "200":
+          description: Workers assigned (copies no longer owned are skipped, not failed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseWorkerAssignment"
+        "400":
+          description: Invalid worker assignment or locked Base
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /base/workers/{workerId}:
+    delete:
+      operationId: dismissBaseWorker
+      tags: [player]
+      summary: Dismiss a Base miner permanently, paying out the blook's sell value in tokens
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Miner dismissed and sell value paid out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseDismissResult"
+        "400":
+          description: Miner not found or not yours
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /base/claim:
+    post:
+      operationId: claimBaseTokens
+      tags: [player]
+      summary: Settle and claim accumulated Base token production
+      responses:
+        "200":
+          description: Claim result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseClaimResult"
+        "400":
+          description: Base is locked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /base/buy-slot:
+    post:
+      operationId: buyBaseSlot
+      tags: [player]
+      summary: Buy one extra permanent miner slot for tokens
+      responses:
+        "200":
+          description: Slot purchased
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseBuySlotResult"
+        "400":
+          description: Not enough tokens or Base locked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /blooks:
+    get:
+      operationId: getBlooks
+      tags: [blooks]
+      summary: Get all blook definitions
+      responses:
+        "200":
+          description: All blooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlookDef"
+  /rarities:
+    get:
+      operationId: getRarities
+      tags: [blooks]
+      summary: Get all rarity definitions
+      responses:
+        "200":
+          description: Rarities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rarity"
+  /packs:
+    get:
+      operationId: getPacks
+      tags: [packs]
+      summary: Get all pack definitions
+      responses:
+        "200":
+          description: Packs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pack"
+  /packs/{name}/open:
+    post:
+      operationId: openPack
+      tags: [packs]
+      summary: Spend tokens to open a pack and win a blook
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pack open result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackOpenResult"
+        "400":
+          description: Not enough tokens or unknown pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /bazaar:
+    get:
+      operationId: getBazaarListings
+      tags: [bazaar]
+      summary: Get active bazaar listings
+      responses:
+        "200":
+          description: Active listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BazaarListing"
+    post:
+      operationId: createBazaarListing
+      tags: [bazaar]
+      summary: List one of your blooks for sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BazaarListingInput"
+      responses:
+        "201":
+          description: Created listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BazaarListing"
+        "400":
+          description: Invalid listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /bazaar/{id}/buy:
+    post:
+      operationId: buyBazaarListing
+      tags: [bazaar]
+      summary: Buy a bazaar listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Purchase result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BazaarBuyResult"
+        "400":
+          description: Cannot buy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /bazaar/{id}:
+    delete:
+      operationId: cancelBazaarListing
+      tags: [bazaar]
+      summary: Cancel your own listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Cannot cancel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /store/offer:
+    get:
+      operationId: getStoreOffer
+      tags: [store]
+      summary: Get the store's starter bundle offer
+      responses:
+        "200":
+          description: Offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOffer"
+  /store/checkout:
+    post:
+      operationId: createStoreCheckout
+      tags: [store]
+      summary: Create a Stripe checkout session for the starter bundle
+      responses:
+        "200":
+          description: Checkout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreCheckout"
+  /store/free-claim:
+    post:
+      operationId: claimFreeStoreBundle
+      tags: [store]
+      summary: Claim the starter bundle for free (allowlisted accounts only)
+      responses:
+        "200":
+          description: Claim result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreClaimResult"
+  /store/claim:
+    post:
+      operationId: claimStorePurchase
+      tags: [store]
+      summary: Verify a completed checkout session and grant rewards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoreClaimInput"
+      responses:
+        "200":
+          description: Claim result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreClaimResult"
+  /chat/messages:
+    get:
+      operationId: getChatMessages
+      tags: [chat]
+      summary: Get recent chat messages (newest last)
+      parameters:
+        - name: after
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Only return messages with id greater than this
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          description: Invalid message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: You are muted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /chat/messages/{id}:
+    delete:
+      operationId: deleteChatMessage
+      tags: [chat]
+      summary: Delete your own chat message
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Message not found or not yours
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans:
+    get:
+      operationId: getClans
+      tags: [clans]
+      summary: List all clans with my application/membership status
+      responses:
+        "200":
+          description: Clans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClanSummary"
+    post:
+      operationId: createClan
+      tags: [clans]
+      summary: Create a clan (creator becomes owner and member)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanCreateInput"
+      responses:
+        "201":
+          description: Created clan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClanDetail"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/my-membership:
+    get:
+      operationId: getMyClanMembership
+      tags: [clans]
+      summary: My clan membership, including hidden (banned) clans the clans list omits
+      responses:
+        "200":
+          description: Membership (inClan false when not in any clan)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyClanMembership"
+  /clans/leave:
+    post:
+      operationId: leaveClan
+      tags: [clans]
+      summary: Leave my clan (owner with other members must transfer ownership first; sole owner leaving disbands the clan; the owner of a banned clan disbands it immediately)
+      responses:
+        "200":
+          description: Left
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Not in a clan, or owner must transfer ownership first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/chat:
+    get:
+      operationId: getClanMessages
+      tags: [clans]
+      summary: Get my clan's chat messages (newest last)
+      parameters:
+        - name: after
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+        "400":
+          description: Not in a clan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    post:
+      operationId: sendClanMessage
+      tags: [clans]
+      summary: Send a message to my clan's chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          description: Invalid message or not in a clan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: You are muted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}:
+    get:
+      operationId: getClan
+      tags: [clans]
+      summary: Get clan details, members, and (for the owner) pending applications
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Clan details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClanDetail"
+        "404":
+          description: Clan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/held-blooks:
+    post:
+      operationId: placeClanHeldBlook
+      tags: [clans]
+      summary: Commit owned blooks to a clan collection in one batch (each rolls the 5 percent placement loss risk independently)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanHeldBlookInput"
+      responses:
+        "200":
+          description: Placement outcome
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClanHeldBlookPlacement"
+        "400":
+          description: Cannot place this blook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/held-blooks/{heldBlookId}/withdraw:
+    post:
+      operationId: withdrawClanHeldBlook
+      tags: [clans]
+      summary: Withdraw your own held blook after its seven-day lock ends
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: heldBlookId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Blook returned to inventory
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClanHeldBlookWithdrawal"
+        "400":
+          description: Blook is not ready or not yours
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/boost:
+    post:
+      operationId: boostClan
+      tags: [clans]
+      summary: Spend a clan boost to raise the clan 10 levels (members only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Boost applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClanBoostResult"
+        "400":
+          description: No boosts available or not a member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/rainbow:
+    post:
+      operationId: setClanRainbow
+      tags: [clans]
+      summary: Apply or remove your rainbow clan name perk (clan owner only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanRainbowInput"
+      responses:
+        "200":
+          description: Rainbow state updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClanRainbowResult"
+        "400":
+          description: Not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/image:
+    post:
+      operationId: setClanImage
+      tags: [clans]
+      summary: Set the clan banner image (owner only, NSFW-checked)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanImageInput"
+      responses:
+        "200":
+          description: Image set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid or rejected image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Not the owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/description:
+    post:
+      operationId: setClanDescription
+      tags: [clans]
+      summary: Set the clan description (owner only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanDescriptionInput"
+      responses:
+        "200":
+          description: Description set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid description
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Not the owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/rename:
+    post:
+      operationId: renameClan
+      tags: [clans]
+      summary: Rename the clan (owner only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanRenameInput"
+      responses:
+        "200":
+          description: Clan renamed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid or taken name
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Not the owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /storage/uploads/request-url:
+    post:
+      tags: [clans]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /storage/objects/{objectPath}:
+    get:
+      tags: [clans]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content streamed with correct Content-Type.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /clans/{clanId}/apply:
+    post:
+      operationId: applyToClan
+      tags: [clans]
+      summary: Apply to join a clan
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Can't apply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/applications:
+    post:
+      operationId: decideClanApplication
+      tags: [clans]
+      summary: Accept or reject a pending application (owner only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanApplicationDecision"
+      responses:
+        "200":
+          description: Decision applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Not the clan owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/kick:
+    post:
+      operationId: kickClanMember
+      tags: [clans]
+      summary: Remove a member from the clan (owner only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanKickInput"
+      responses:
+        "200":
+          description: Member removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Not the clan owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/transfer:
+    post:
+      operationId: transferClanOwnership
+      tags: [clans]
+      summary: Transfer clan ownership to another member (owner only)
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClanTransferInput"
+      responses:
+        "200":
+          description: Ownership transferred
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "403":
+          description: Not the clan owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /clans/{clanId}/join:
+    post:
+      operationId: joinClan
+      tags: [clans]
+      summary: Join a clan after your application was accepted
+      parameters:
+        - name: clanId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Can't join
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [social]
+      summary: Get top players by experience or mine rate
+      parameters:
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [experience, mineRate]
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+  /stats:
+    get:
+      operationId: getStats
+      tags: [social]
+      summary: Get player collection stats and recent unlock activity
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsSummary"
+  /admin/ai-scan:
+    post:
+      operationId: adminAiScan
+      tags: [admin]
+      summary: Run an AI moderation scan over usernames, clan names, and chat messages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminAiScanInput"
+      responses:
+        "200":
+          description: Flagged items awaiting approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAiScanResult"
+  /admin/ai-scan/apply:
+    post:
+      operationId: adminAiScanApply
+      tags: [admin]
+      summary: Apply approved AI moderation actions (delete/rename flagged content)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminAiApplyInput"
+      responses:
+        "200":
+          description: Actions applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAiApplyResult"
+  /owner/settings:
+    post:
+      operationId: ownerGetSettings
+      tags: [owner]
+      summary: Authenticate the owner and read owner-controlled settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: Current owner settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerSettings"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/settings/set:
+    post:
+      operationId: ownerSetSettings
+      tags: [owner]
+      summary: Update owner-controlled settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerSettingsSetInput"
+      responses:
+        "200":
+          description: Updated owner settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerSettings"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/pack-order:
+    post:
+      operationId: ownerGetPackOrder
+      tags: [owner]
+      summary: Authenticate the owner and read the market pack order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: Current effective market pack order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPackOrder"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/pack-order/set:
+    post:
+      operationId: ownerSetPackOrder
+      tags: [owner]
+      summary: Save a new market pack order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPackOrderSetInput"
+      responses:
+        "200":
+          description: Updated effective market pack order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPackOrder"
+        "400":
+          description: Invalid pack order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/clans:
+    post:
+      operationId: ownerListClans
+      tags: [owner]
+      summary: List all clans with their levels (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: All clans with levels
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerClanList"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/purchases:
+    post:
+      operationId: ownerListPurchases
+      tags: [owner]
+      summary: List all store purchases with buyer usernames (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: All store purchases, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPurchaseList"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/panel-access:
+    post:
+      operationId: ownerListPanelAccess
+      tags: [owner]
+      summary: List accounts approved to use the staff panels (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: Approved accounts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPanelAccessList"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/panel-access/set:
+    post:
+      operationId: ownerSetPanelAccess
+      tags: [owner]
+      summary: Grant or revoke an account's access to one staff panel (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPanelAccessSetInput"
+      responses:
+        "200":
+          description: Updated approved accounts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPanelAccessList"
+        "400":
+          description: Unknown account or trying to revoke yourself
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/unlock-account:
+    post:
+      operationId: ownerUnlockAccount
+      tags: [owner]
+      summary: Unlock an account so the next login with any password resets it (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerUnlockAccountInput"
+      responses:
+        "200":
+          description: Account unlocked for a one-time password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Unknown account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/ip-bans:
+    post:
+      operationId: adminListIpBans
+      tags: [admin]
+      summary: List IP bans with accounts sharing each IP (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: IP bans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminIpBanList"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/ip-bans/ban:
+    post:
+      operationId: adminIpBan
+      tags: [admin]
+      summary: Ban a player's account and their last IP (blocks new signups from that IP only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminIpBanInput"
+      responses:
+        "200":
+          description: Updated IP bans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminIpBanList"
+        "400":
+          description: Unknown account or no IP recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /admin/ip-bans/unban:
+    post:
+      operationId: adminIpUnban
+      tags: [admin]
+      summary: Remove an IP ban (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminIpUnbanInput"
+      responses:
+        "200":
+          description: Updated IP bans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminIpBanList"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/mod-badges:
+    post:
+      operationId: ownerListModBadges
+      tags: [owner]
+      summary: List accounts holding the Mod badge (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerPasswordInput"
+      responses:
+        "200":
+          description: Mod badge holders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerModBadgeList"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/pfp/set:
+    post:
+      operationId: ownerSetPlayerPfp
+      tags: [owner]
+      summary: Set a player's custom profile picture from an uploaded image (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerSetPfpInput"
+      responses:
+        "200":
+          description: Updated player avatar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPfpResult"
+        "400":
+          description: Unknown account or invalid image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/pfp/remove:
+    post:
+      operationId: ownerRemovePlayerPfp
+      tags: [owner]
+      summary: Remove a player's custom profile picture (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerRemovePfpInput"
+      responses:
+        "200":
+          description: Player avatar reset to their equipped blook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerPfpResult"
+        "400":
+          description: Unknown account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/mod-badges/set:
+    post:
+      operationId: ownerSetModBadge
+      tags: [owner]
+      summary: Approve a Mod badge holder for the mod panel, or decline and strip the badge (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerModBadgeSetInput"
+      responses:
+        "200":
+          description: Updated Mod badge holders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerModBadgeList"
+        "400":
+          description: Unknown account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /owner/clans/set-level:
+    post:
+      operationId: ownerSetClanLevel
+      tags: [owner]
+      summary: Set or reset a clan's level (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnerSetClanLevelInput"
+      responses:
+        "200":
+          description: Updated clan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerClanInfo"
+        "401":
+          description: Wrong owner password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Clan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /online-count:
+    get:
+      operationId: getOnlineCount
+      tags: [social]
+      summary: Get the number of players currently online
+      responses:
+        "200":
+          description: Online player count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnlineCount"
+  /trades/requests:
+    get:
+      operationId: getTradeRequests
+      tags: [trades]
+      summary: Get my pending incoming and outgoing trade requests
+      responses:
+        "200":
+          description: Pending trade requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeRequestList"
+    post:
+      operationId: sendTradeRequest
+      tags: [trades]
+      summary: Send a trade request to a player by username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeRequestInput"
+      responses:
+        "201":
+          description: Created request (if the target is a bot it may be auto-accepted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeRequest"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Player not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/requests/{id}/accept:
+    post:
+      operationId: acceptTradeRequest
+      tags: [trades]
+      summary: Accept an incoming trade request (starts the trade)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The trade that was started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "400":
+          description: Cannot accept
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/requests/{id}/decline:
+    post:
+      operationId: declineTradeRequest
+      tags: [trades]
+      summary: Decline an incoming trade request (or cancel an outgoing one)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Declined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Cannot decline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/current:
+    get:
+      operationId: getCurrentTrade
+      tags: [trades]
+      summary: Get the current trade state (also advances the partner's behavior)
+      responses:
+        "200":
+          description: Current trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "404":
+          description: No active trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/current/offer:
+    put:
+      operationId: updateTradeOffer
+      tags: [trades]
+      summary: Replace my side of the trade offer (clears both sides' accepts)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeOfferInput"
+      responses:
+        "200":
+          description: Updated trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "400":
+          description: Invalid offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/current/accept:
+    post:
+      operationId: acceptTrade
+      tags: [trades]
+      summary: Toggle my acceptance of the current offers (completes the trade when both accept)
+      responses:
+        "200":
+          description: Updated trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "400":
+          description: No active trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/current/decline:
+    post:
+      operationId: declineTrade
+      tags: [trades]
+      summary: Decline and end the current trade
+      responses:
+        "200":
+          description: Declined trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "400":
+          description: No active trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /trades/current/messages:
+    get:
+      operationId: getTradeMessages
+      tags: [trades]
+      summary: Get private trade chat messages (newest last)
+      parameters:
+        - name: after
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Only return messages with id greater than this
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: sendTradeMessage
+      tags: [trades]
+      summary: Send a private trade chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          description: Invalid message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+    ApiMessage:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+    BlookGenInput:
+      type: object
+      properties:
+        description: { type: string, minLength: 2, maxLength: 300 }
+      required: [description]
+    GeneratedBlook:
+      type: object
+      properties:
+        imageDataUrl: { type: string }
+      required: [imageDataUrl]
+    Player:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        tokens: { type: integer }
+        experience: { type: integer }
+        level: { type: integer }
+        avatarBlook: { type: ["string", "null"] }
+        avatarImage: { type: ["string", "null"] }
+        bannerColor: { type: ["string", "null"] }
+        packsOpened: { type: integer }
+        uniqueBlooks: { type: integer }
+        totalBlooks: { type: integer }
+        nextClaimAt: { type: ["string", "null"] }
+        nameEffect: { type: ["string", "null"] }
+        chatColor: { type: ["string", "null"], description: "Custom chat text color (#rrggbb) or null for default" }
+        hasBundle: { type: boolean, description: "Owns the Starter Bundle (unlocks custom chat/name colors)" }
+        clanBoosts: { type: integer, description: "Unused clan level boosts (+10 levels each)" }
+        rainbowPerks: { type: integer, description: "Unattached rainbow clan name perks" }
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+        createdAt: { type: string }
+      required:
+        [id, username, tokens, experience, level, avatarBlook, avatarImage, bannerColor, packsOpened, uniqueBlooks, totalBlooks, nextClaimAt, clanBoosts, rainbowPerks, badges, createdAt]
+    PlayerUpdate:
+      type: object
+      properties:
+        avatarBlook: { type: string }
+        bannerColor: { type: string }
+        username: { type: string, minLength: 3, maxLength: 20 }
+        currentPassword: { type: string, minLength: 1, maxLength: 100, description: "Required when changing username: the account's current password" }
+        chatColor: { type: ["string", "null"], description: "Custom chat text color (#rrggbb); null resets to default (Starter Bundle perk)" }
+        nameColor: { type: string, description: "Custom name color (#rrggbb) or 'golden' to switch back (Starter Bundle perk)" }
+    ClaimResult:
+      type: object
+      properties:
+        claimed: { type: boolean }
+        tokensAwarded: { type: integer }
+        tokens: { type: integer }
+        nextClaimAt: { type: string }
+      required: [claimed, tokensAwarded, tokens, nextClaimAt]
+    Rarity:
+      type: object
+      properties:
+        name: { type: string }
+        color: { type: string }
+        animation: { type: string }
+        exp: { type: integer }
+      required: [name, color, animation, exp]
+    BlookDef:
+      type: object
+      properties:
+        name: { type: string }
+        rarity: { type: string }
+        chance: { type: number }
+        price: { type: integer }
+        image: { type: string }
+        pack: { type: ["string", "null"] }
+      required: [name, rarity, chance, price, image, pack]
+    CraftPreviewInput:
+      type: object
+      properties:
+        blooks:
+          type: array
+          items: { type: string }
+          minItems: 1
+          maxItems: 5
+      required: [blooks]
+    CraftOutcome:
+      type: object
+      properties:
+        name: { type: string }
+        rarity: { type: string }
+        image: { type: string }
+        price: { type: integer }
+        chance: { type: number, description: "Percent chance without luck" }
+        luckChance: { type: number, description: "Percent chance with the 2.5x luck item" }
+      required: [name, rarity, image, price, chance, luckChance]
+    CraftPreview:
+      type: object
+      properties:
+        outcomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CraftOutcome"
+        luckItems: { type: integer, description: "2.5x luck items the player owns" }
+      required: [outcomes, luckItems]
+    CraftInput:
+      type: object
+      properties:
+        blooks:
+          type: array
+          items: { type: string }
+          minItems: 1
+          maxItems: 5
+        useLuck: { type: boolean }
+      required: [blooks, useLuck]
+    CraftResult:
+      type: object
+      properties:
+        blook:
+          type: object
+          properties:
+            name: { type: string }
+            rarity: { type: string }
+            image: { type: string }
+            price: { type: integer }
+          required: [name, rarity, image, price]
+        isNew: { type: boolean }
+        usedLuck: { type: boolean }
+        luckItemsLeft: { type: integer }
+      required: [blook, isNew, usedLuck, luckItemsLeft]
+    OwnedBlook:
+      type: object
+      properties:
+        name: { type: string }
+        quantity: { type: integer }
+        rarity: { type: string }
+        image: { type: string }
+        price: { type: integer }
+        pack: { type: ["string", "null"] }
+        firstObtainedAt: { type: string }
+        clanEffect:
+          type: ["string", "null"]
+          description: "Server-defined clan power granted while this blook is held by a clan. Every blook has one: Mysticals grant a unique aura, all others pay the clan token mine at a rarity-scaled rate."
+      required: [name, quantity, rarity, image, price, pack, firstObtainedAt, clanEffect]
+    SellRequest:
+      type: object
+      properties:
+        name: { type: string }
+        quantity: { type: integer, minimum: 1 }
+      required: [name, quantity]
+    SellResult:
+      type: object
+      properties:
+        tokensEarned: { type: integer }
+        tokens: { type: integer }
+        remainingQuantity: { type: integer }
+      required: [tokensEarned, tokens, remainingQuantity]
+    BaseWorker:
+      type: object
+      properties:
+        id: { type: integer }
+        blookName: { type: string }
+        rarity: { type: string }
+        image: { type: string }
+        tokenRatePerHour: { type: integer }
+        sellValue: { type: integer }
+        assignedAt: { type: string, format: date-time }
+      required: [id, blookName, rarity, image, tokenRatePerHour, sellValue, assignedAt]
+    BaseWorkerInput:
+      type: object
+      properties:
+        blookNames:
+          type: array
+          items: { type: string, minLength: 1 }
+          minItems: 1
+          maxItems: 30
+      required: [blookNames]
+    BaseWorkerAssignment:
+      type: object
+      properties:
+        deployedCount: { type: integer }
+        skippedCount: { type: integer }
+        base: { $ref: "#/components/schemas/BaseStatus" }
+      required: [deployedCount, skippedCount, base]
+    BaseStatus:
+      type: object
+      properties:
+        unlocked: { type: boolean }
+        level: { type: integer }
+        levelRequired: { type: integer }
+        tokensReady: { type: integer }
+        tokenRatePerHour: { type: integer }
+        maxWorkers: { type: integer }
+        nextSlotCost: { type: integer }
+        workers:
+          type: array
+          items:
+            $ref: "#/components/schemas/BaseWorker"
+      required: [unlocked, level, levelRequired, tokensReady, tokenRatePerHour, maxWorkers, nextSlotCost, workers]
+    BaseClaimResult:
+      type: object
+      properties:
+        claimed: { type: boolean }
+        tokensAwarded: { type: integer }
+        tokens: { type: integer }
+        base:
+          $ref: "#/components/schemas/BaseStatus"
+      required: [claimed, tokensAwarded, tokens, base]
+    BaseDismissResult:
+      type: object
+      properties:
+        tokensAwarded: { type: integer }
+        tokens: { type: integer }
+        base:
+          $ref: "#/components/schemas/BaseStatus"
+      required: [tokensAwarded, tokens, base]
+    BaseBuySlotResult:
+      type: object
+      properties:
+        tokens: { type: integer }
+        base:
+          $ref: "#/components/schemas/BaseStatus"
+      required: [tokens, base]
+    Pack:
+      type: object
+      properties:
+        name: { type: string }
+        price: { type: integer }
+        color1: { type: string }
+        color2: { type: string }
+        image: { type: string }
+        blooks:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlookDef"
+        remaining:
+          type: integer
+          nullable: true
+          description: "Global supply left for limited packs (Top pack); null/absent for normal packs"
+      required: [name, price, color1, color2, image, blooks]
+    PackOpenResult:
+      type: object
+      properties:
+        blook:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/BlookDef"
+          description: "Null when a Top-pack open comes up empty"
+        isNew: { type: boolean }
+        tokens: { type: integer }
+        experience: { type: integer }
+        level: { type: integer }
+        pullId: { type: integer, nullable: true, description: "Id of the logged pack pull — pass to sharePullId to flex it in DMs; null on an empty Top-pack open" }
+      required: [blook, isNew, tokens, experience, level, pullId]
+    BazaarListing:
+      type: object
+      properties:
+        id: { type: integer }
+        sellerName: { type: string }
+        sellerNameEffect: { type: ["string", "null"] }
+        blookName: { type: string }
+        rarity: { type: string }
+        image: { type: string }
+        price: { type: integer }
+        pack: { type: ["string", "null"] }
+        isMine: { type: boolean }
+        createdAt: { type: string }
+      required: [id, sellerName, blookName, rarity, image, price, pack, isMine, createdAt]
+    BazaarListingInput:
+      type: object
+      properties:
+        blookName: { type: string }
+        price: { type: integer, minimum: 1, maximum: 1000000000 }
+      required: [blookName, price]
+    BazaarBuyResult:
+      type: object
+      properties:
+        blookName: { type: string }
+        price: { type: integer }
+        tokens: { type: integer }
+      required: [blookName, price, tokens]
+    StoreOffer:
+      type: object
+      properties:
+        available: { type: boolean }
+        priceAmount: { type: ["integer", "null"], description: "Price in cents" }
+        currency: { type: ["string", "null"] }
+        tokens: { type: integer }
+        alreadyPurchased: { type: boolean }
+        freeForYou: { type: boolean, description: "This account can claim the bundle for free" }
+        chromaBlooks:
+          type: array
+          description: "All possible Chroma blooks (name + image) the bundle can grant"
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              image: { type: ["string", "null"] }
+            required: [name, image]
+      required: [available, priceAmount, currency, tokens, alreadyPurchased, freeForYou, chromaBlooks]
+    StoreCheckout:
+      type: object
+      properties:
+        url: { type: ["string", "null"] }
+      required: [url]
+    StoreClaimInput:
+      type: object
+      properties:
+        sessionId: { type: string, minLength: 1 }
+      required: [sessionId]
+    StoreClaimResult:
+      type: object
+      properties:
+        alreadyClaimed: { type: boolean }
+        tokens: { type: integer }
+        blooks:
+          type: array
+          description: "The blooks granted by this bundle (normally 2 Chromas; 1% chance each is a Mystical)"
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              rarity: { type: string }
+              image: { type: ["string", "null"] }
+            required: [name, rarity, image]
+      required: [alreadyClaimed, tokens, blooks]
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        author: { type: string }
+        avatarBlook: { type: ["string", "null"] }
+        avatarImage: { type: ["string", "null"] }
+        nameEffect: { type: ["string", "null"] }
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+        content: { type: string }
+        mentions:
+          type: array
+          items: { type: string }
+        mentionEffects:
+          type: object
+          additionalProperties: { type: ["string", "null"] }
+        isMine: { type: boolean }
+        createdAt: { type: string }
+        clanName: { type: ["string", "null"] }
+        clanColor: { type: ["string", "null"] }
+        chatColor: { type: ["string", "null"] }
+      required: [id, author, avatarBlook, avatarImage, badges, content, mentions, isMine, createdAt, clanName, clanColor]
+    ChatMessageInput:
+      type: object
+      properties:
+        content: { type: string, minLength: 1, maxLength: 500 }
+      required: [content]
+    MyClanMembership:
+      type: object
+      required: [inClan, banned]
+      properties:
+        inClan:
+          type: boolean
+        banned:
+          type: boolean
+        clanId:
+          type: integer
+          nullable: true
+        clanName:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+    ClanSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        color: { type: string }
+        memberCount: { type: integer }
+        ownerUsername: { type: string }
+        myStatus: { type: string, enum: [none, pending, accepted, member, owner] }
+        imageUrl: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        level: { type: integer }
+        experience: { type: integer }
+        rainbow: { type: boolean }
+      required: [id, name, color, memberCount, ownerUsername, myStatus, imageUrl, description, level, experience, rainbow]
+    ClanBoostResult:
+      type: object
+      properties:
+        level: { type: integer }
+        experience: { type: integer }
+        clanBoostsLeft: { type: integer }
+      required: [level, experience, clanBoostsLeft]
+    ClanRainbowInput:
+      type: object
+      properties:
+        apply: { type: boolean }
+      required: [apply]
+    ClanRainbowResult:
+      type: object
+      properties:
+        rainbow: { type: boolean }
+        rainbowPerksLeft: { type: integer }
+      required: [rainbow, rainbowPerksLeft]
+    ClanCreateInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 20 }
+        color: { type: string, minLength: 4, maxLength: 20 }
+        imagePath: { type: ["string", "null"] }
+      required: [name, color]
+    ClanImageInput:
+      type: object
+      properties:
+        imagePath: { type: string, minLength: 1 }
+      required: [imagePath]
+    ClanDescriptionInput:
+      type: object
+      properties:
+        description: { type: string, maxLength: 100 }
+      required: [description]
+    ClanRenameInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 20 }
+      required: [name]
+    ClanMemberView:
+      type: object
+      properties:
+        username: { type: string }
+        role: { type: string }
+        avatarImage: { type: ["string", "null"] }
+      required: [username, role, avatarImage]
+    ClanApplicantView:
+      type: object
+      properties:
+        username: { type: string }
+        avatarImage: { type: ["string", "null"] }
+      required: [username, avatarImage]
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name: { type: string, minLength: 1 }
+        size: { type: integer, minimum: 1 }
+        contentType: { type: string, minLength: 1 }
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL: { type: string }
+        objectPath: { type: string }
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+    ClanApplicationDecision:
+      type: object
+      properties:
+        username: { type: string, minLength: 1 }
+        action: { type: string, enum: [accept, reject] }
+      required: [username, action]
+    ClanKickInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 1 }
+      required: [username]
+    ClanTransferInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 1 }
+      required: [username]
+    ClanEffect:
+      type: object
+      properties:
+        key: { type: string }
+        label: { type: string }
+        description: { type: string }
+      required: [key, label, description]
+    ClanHeldBlook:
+      type: object
+      properties:
+        id: { type: integer }
+        blookName: { type: string }
+        rarity: { type: string }
+        image: { type: string }
+        ownerUsername: { type: string }
+        ownerAvatarImage: { type: ["string", "null"] }
+        placedAt: { type: string, format: date-time }
+        withdrawableAt: { type: string, format: date-time }
+        canWithdraw: { type: boolean }
+        effect: { type: ["string", "null"] }
+      required: [id, blookName, rarity, image, ownerUsername, ownerAvatarImage, placedAt, withdrawableAt, canWithdraw, effect]
+    ClanHeldBlookInput:
+      type: object
+      properties:
+        blookNames:
+          type: array
+          items: { type: string, minLength: 1 }
+          minItems: 1
+          maxItems: 30
+      required: [blookNames]
+    ClanHeldBlookPlacementResult:
+      type: object
+      properties:
+        blookName: { type: string }
+        outcome: { type: string, enum: [held, lost, unavailable] }
+      required: [blookName, outcome]
+    ClanHeldBlookPlacement:
+      type: object
+      properties:
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/ClanHeldBlookPlacementResult" }
+        heldCount: { type: integer }
+        lostCount: { type: integer }
+        withdrawableAt: { type: ["string", "null"], format: date-time }
+      required: [results, heldCount, lostCount, withdrawableAt]
+    ClanHeldBlookWithdrawal:
+      type: object
+      properties:
+        blookName: { type: string }
+        message: { type: string }
+      required: [blookName, message]
+    ClanHeldProduction:
+      type: object
+      description: "Requesting member's mine view: every held blook except Uncommons pays every member tokens hourly (rate scales with rarity, Mysticals pay the top rate on top of their aura), deposited automatically — no manual collect"
+      properties:
+        payingCount: { type: integer }
+        ratePerHour: { type: integer }
+      required: [payingCount, ratePerHour]
+    ClanDetail:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        color: { type: string }
+        ownerUsername: { type: string }
+        myStatus: { type: string, enum: [none, pending, accepted, member, owner] }
+        imageUrl: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        level: { type: integer }
+        experience: { type: integer }
+        rainbow: { type: boolean }
+        rainbowMine: { type: boolean, description: "The rainbow on this clan was applied by me (I can remove it)" }
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClanMemberView"
+        pendingApplications:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClanApplicantView"
+        heldBlooks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClanHeldBlook"
+        activeEffects:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClanEffect"
+        heldProduction:
+          $ref: "#/components/schemas/ClanHeldProduction"
+      required: [id, name, color, ownerUsername, myStatus, imageUrl, description, level, experience, rainbow, rainbowMine, members, pendingApplications, heldBlooks, activeEffects, heldProduction]
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank: { type: integer }
+        username: { type: string }
+        level: { type: integer }
+        experience: { type: integer }
+        tokens: { type: integer }
+        uniqueBlooks: { type: integer }
+        avatarBlook: { type: ["string", "null"] }
+        avatarImage: { type: ["string", "null"] }
+        nameEffect: { type: ["string", "null"] }
+        minePerHour: { type: integer }
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+        isMe: { type: boolean }
+      required: [rank, username, level, experience, tokens, uniqueBlooks, avatarBlook, avatarImage, badges, nameEffect, isMe, minePerHour]
+    UnlockEvent:
+      type: object
+      properties:
+        blookName: { type: string }
+        rarity: { type: string }
+        image: { type: string }
+        packName: { type: string }
+        createdAt: { type: string }
+      required: [blookName, rarity, image, packName, createdAt]
+    RarityCount:
+      type: object
+      properties:
+        rarity: { type: string }
+        color: { type: string }
+        owned: { type: integer }
+        total: { type: integer }
+      required: [rarity, color, owned, total]
+    RegisterInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 3, maxLength: 20 }
+        password: { type: string, minLength: 8, maxLength: 100 }
+      required: [username, password]
+    LoginInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 1 }
+        password: { type: string, minLength: 1 }
+      required: [username, password]
+    FriendRequestInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 1 }
+      required: [username]
+    DmInput:
+      type: object
+      properties:
+        content: { type: string, maxLength: 500 }
+        giftBlook: { type: string, description: "Blook name to gift from your collection" }
+        sharePullId: { type: integer, description: "Id of one of YOUR pack pulls to share as a verified flex card" }
+    GiftSendInput:
+      type: object
+      properties:
+        username: { type: string }
+        tokens: { type: integer, minimum: 0 }
+        blooks:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              quantity: { type: integer, minimum: 1 }
+            required: [name, quantity]
+      required: [username, tokens, blooks]
+    FriendView:
+      type: object
+      properties:
+        username: { type: string }
+        avatarImage: { type: ["string", "null"] }
+        nameEffect: { type: ["string", "null"] }
+        isOnline: { type: boolean }
+      required: [username, avatarImage, nameEffect, isOnline]
+    FriendRequestView:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        avatarImage: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, username, avatarImage, createdAt]
+    FriendsOverview:
+      type: object
+      properties:
+        friends:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendView"
+        incoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendRequestView"
+        outgoing:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendRequestView"
+      required: [friends, incoming, outgoing]
+    FriendRequestResult:
+      type: object
+      properties:
+        message: { type: string }
+        status: { type: string, description: "'pending' or 'accepted' (auto-accept when they already asked you)" }
+      required: [message, status]
+    DmConversation:
+      type: object
+      properties:
+        username: { type: string }
+        avatarImage: { type: ["string", "null"] }
+        nameEffect: { type: ["string", "null"] }
+        isFriend: { type: boolean }
+        lastMessage: { type: string }
+        lastAt: { type: string }
+        unread: { type: integer }
+      required: [username, avatarImage, nameEffect, isFriend, lastMessage, lastAt, unread]
+    DmMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        fromMe: { type: boolean }
+        content: { type: string }
+        giftBlook: { type: ["string", "null"] }
+        giftImage: { type: ["string", "null"] }
+        giftRarity: { type: ["string", "null"] }
+        giftClaimed: { type: boolean }
+        pull:
+          oneOf:
+            - type: "null"
+            - type: object
+              description: "Server-verified pack pull shared as a flex card"
+              properties:
+                blookName: { type: string }
+                image: { type: ["string", "null"] }
+                rarity: { type: ["string", "null"] }
+                packName: { type: string }
+                pulledAt: { type: string }
+              required: [blookName, image, rarity, packName, pulledAt]
+        createdAt: { type: string }
+      required: [id, fromMe, content, giftBlook, giftImage, giftRarity, giftClaimed, pull, createdAt]
+    DmThread:
+      type: object
+      properties:
+        partner:
+          type: object
+          properties:
+            username: { type: string }
+            avatarImage: { type: ["string", "null"] }
+            nameEffect: { type: ["string", "null"] }
+            chatColor: { type: ["string", "null"] }
+            isFriend: { type: boolean }
+          required: [username, avatarImage, nameEffect, chatColor, isFriend]
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/DmMessage"
+      required: [partner, messages]
+    ChangePasswordInput:
+      type: object
+      properties:
+        oldPassword: { type: string, minLength: 1 }
+        newPassword: { type: string, minLength: 8 }
+      required: [oldPassword, newPassword]
+    AuthResult:
+      type: object
+      properties:
+        username: { type: string }
+      required: [username]
+    Badge:
+      type: object
+      properties:
+        name: { type: string }
+        image: { type: string }
+        description: { type: string }
+      required: [name, image, description]
+    AdminAuthInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+      required: [password]
+    AdminLookup:
+      type: object
+      properties:
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+        blooks:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              rarity: { type: string }
+              image: { type: string }
+            required: [name, rarity, image]
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              username: { type: string }
+              badges:
+                type: array
+                items: { type: string }
+              nameEffect: { type: ["string", "null"] }
+            required: [username, badges, nameEffect]
+      required: [badges, blooks, players]
+    AdminGrantBadgeInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        badge: { type: string, minLength: 1 }
+      required: [password, username, badge]
+    AdminGrantBadgeResult:
+      type: object
+      properties:
+        username: { type: string }
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+      required: [username, badges]
+    AdminGrantBlookInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        blook: { type: string, minLength: 1 }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+      required: [password, username, blook]
+    AdminGrantBlookResult:
+      type: object
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending] }
+        username: { type: string }
+        blook: { type: string }
+        quantity: { type: integer }
+      required: [id, status, username, blook, quantity]
+    AdminGrantModInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+      required: [password, username]
+    AdminGrantModResult:
+      type: object
+      properties:
+        username: { type: string }
+        granted: { type: boolean }
+      required: [username, granted]
+    AdminUpdateBadgesInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        add:
+          type: array
+          items: { type: string }
+        remove:
+          type: array
+          items: { type: string }
+      required: [password, username]
+    AdminRenamePlayerInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        newUsername: { type: string, minLength: 1 }
+      required: [password, username, newUsername]
+    AdminRenamePlayerResult:
+      type: object
+      properties:
+        oldUsername: { type: string }
+        username: { type: string }
+      required: [oldUsername, username]
+    AdminResetPasswordInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+      required: [password, username]
+    AdminResetPasswordResult:
+      type: object
+      properties:
+        username: { type: string }
+        newPassword: { type: string }
+      required: [username, newPassword]
+    AdminSetNameEffectInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        effect:
+          type: string
+          enum: [rainbow, none]
+      required: [password, username, effect]
+    AdminGiftAllBlooksInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+      required: [password, username]
+    AdminGiftAllBlooksResult:
+      type: object
+      properties:
+        username: { type: string }
+        blookCount: { type: integer }
+        quantityEach: { type: integer }
+      required: [username, blookCount, quantityEach]
+    AdminDeletePlayersInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        usernames:
+          type: array
+          items: { type: string, minLength: 1 }
+          minItems: 1
+      required: [password, usernames]
+    AdminDeletePlayersResult:
+      type: object
+      properties:
+        deleted:
+          type: array
+          items: { type: string }
+        notFound:
+          type: array
+          items: { type: string }
+      required: [deleted, notFound]
+    AdminPurgeLinkMessagesResult:
+      type: object
+      properties:
+        messagesDeleted: { type: integer }
+      required: [messagesDeleted]
+    AdminGiveTokensAllInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        amount: { type: integer, minimum: 1, maximum: 1000000000 }
+      required: [password, amount]
+    AdminGiveTokensAllResult:
+      type: object
+      properties:
+        playersUpdated: { type: integer }
+        amount: { type: integer }
+      required: [playersUpdated, amount]
+    AdminGiveTokensInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        amount: { type: integer, minimum: -1000000000, maximum: 1000000000 }
+      required: [password, username, amount]
+    AdminGiveTokensResult:
+      type: object
+      properties:
+        username: { type: string }
+        amount: { type: integer }
+        tokens: { type: integer }
+      required: [username, amount, tokens]
+    AdminGrantInfo:
+      type: object
+      properties:
+        id: { type: integer }
+        givenBy: { type: ["string", "null"] }
+        givenTo: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, givenBy, givenTo, createdAt]
+    AdminGrantList:
+      type: object
+      properties:
+        grants:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminGrantInfo"
+      required: [grants]
+    AdminGrantBundleInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+      required: [password, username]
+    AdminGrantBundleResult:
+      type: object
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending] }
+        username: { type: string }
+      required: [id, status, username]
+    GrantRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        kind: { type: string, enum: [blook, starter_bundle] }
+        requesterName: { type: ["string", "null"] }
+        targetUsername: { type: string }
+        blook: { type: ["string", "null"] }
+        quantity: { type: ["integer", "null"] }
+        status: { type: string, enum: [pending, approved, rejected] }
+        createdAt: { type: string }
+        decidedBy: { type: ["string", "null"] }
+        decidedAt: { type: ["string", "null"] }
+      required: [id, kind, requesterName, targetUsername, blook, quantity, status, createdAt, decidedBy, decidedAt]
+    GrantRequestList:
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: "#/components/schemas/GrantRequest"
+      required: [requests]
+    OwnerGrantRequestDecisionInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        requestId: { type: integer, minimum: 1 }
+      required: [password, requestId]
+    CoownerPasswordInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+      required: [password]
+    CoownerGrantRequestDecisionInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        requestId: { type: integer, minimum: 1 }
+      required: [password, requestId]
+    AdminCleanupCatalogResult:
+      type: object
+      properties:
+        ownedBlooksDeleted: { type: integer }
+        unlocksDeleted: { type: integer }
+        listingsDeleted: { type: integer }
+        avatarsCleared: { type: integer }
+      required: [ownedBlooksDeleted, unlocksDeleted, listingsDeleted, avatarsCleared]
+    AdminOnlinePlayer:
+      type: object
+      properties:
+        username: { type: string }
+        lastSeenAt: { type: string }
+      required: [username, lastSeenAt]
+    AdminPlayerStatsResult:
+      type: object
+      properties:
+        totalPlayers: { type: integer }
+        onlineCount: { type: integer }
+        purchaseCount: { type: integer }
+        purchaseBuyers: { type: integer }
+        onlinePlayers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminOnlinePlayer"
+      required: [totalPlayers, onlineCount, purchaseCount, purchaseBuyers, onlinePlayers]
+    AdminPasswordInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+      required: [password]
+    AdminClearResult:
+      type: object
+      properties:
+        deleted: { type: integer }
+      required: [deleted]
+    AdminSetNameEffectResult:
+      type: object
+      properties:
+        username: { type: string }
+        nameEffect: { type: ["string", "null"] }
+      required: [username, nameEffect]
+    PublicPlayer:
+      type: object
+      properties:
+        username: { type: string }
+        level: { type: integer }
+        experience: { type: integer }
+        tokens: { type: integer }
+        packsOpened: { type: integer }
+        minePerHour: { type: integer }
+        uniqueBlooks: { type: integer }
+        totalBlooks: { type: integer }
+        totalBlookDefs: { type: integer }
+        avatarBlook: { type: ["string", "null"] }
+        avatarImage: { type: ["string", "null"] }
+        nameEffect: { type: ["string", "null"] }
+        hasBundle: { type: boolean, description: "Owns the Starter Bundle" }
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+        isOnline: { type: boolean }
+        joinedAt: { type: string }
+        friendStatus: { type: string, enum: [none, friends, outgoing, incoming, self] }
+      required: [username, level, experience, tokens, packsOpened, minePerHour, uniqueBlooks, totalBlooks, totalBlookDefs, avatarBlook, avatarImage, hasBundle, badges, isOnline, joinedAt, friendStatus]
+    TradeRequestInput:
+      type: object
+      properties:
+        username: { type: string, minLength: 1 }
+      required: [username]
+    TradeRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        fromUsername: { type: string }
+        fromAvatarImage: { type: ["string", "null"] }
+        toUsername: { type: string }
+        toAvatarImage: { type: ["string", "null"] }
+        direction: { type: string, enum: [incoming, outgoing] }
+        status: { type: string, enum: [pending, accepted, declined, cancelled] }
+        createdAt: { type: string }
+      required: [id, fromUsername, fromAvatarImage, toUsername, toAvatarImage, direction, status, createdAt]
+    TradeRequestList:
+      type: object
+      properties:
+        incoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradeRequest"
+        outgoing:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradeRequest"
+      required: [incoming, outgoing]
+    TradeOfferBlook:
+      type: object
+      properties:
+        name: { type: string }
+        quantity: { type: integer }
+        rarity: { type: string }
+        image: { type: string }
+        price: { type: integer }
+      required: [name, quantity, rarity, image, price]
+    TradeOffer:
+      type: object
+      properties:
+        tokens: { type: integer }
+        blooks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradeOfferBlook"
+      required: [tokens, blooks]
+    TradeOfferBlookInput:
+      type: object
+      properties:
+        name: { type: string }
+        quantity: { type: integer, minimum: 1 }
+      required: [name, quantity]
+    TradeOfferInput:
+      type: object
+      properties:
+        tokens: { type: integer, minimum: 0 }
+        blooks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradeOfferBlookInput"
+      required: [tokens, blooks]
+    Trade:
+      type: object
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [active, completed, declined] }
+        partnerName: { type: string }
+        partnerAvatarBlook: { type: ["string", "null"] }
+        partnerAvatarImage: { type: ["string", "null"] }
+        myOffer:
+          $ref: "#/components/schemas/TradeOffer"
+        partnerOffer:
+          $ref: "#/components/schemas/TradeOffer"
+        myAccepted: { type: boolean }
+        partnerAccepted: { type: boolean }
+        createdAt: { type: string }
+      required:
+        [id, status, partnerName, partnerAvatarBlook, partnerAvatarImage, myOffer, partnerOffer, myAccepted, partnerAccepted, createdAt]
+    StatsSummary:
+      type: object
+      properties:
+        packsOpened: { type: integer }
+        uniqueBlooks: { type: integer }
+        totalBlookDefs: { type: integer }
+        tokensSpent: { type: integer }
+        tokensEarned: { type: integer }
+        messagesSent: { type: integer }
+        rarityBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/RarityCount"
+        recentUnlocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnlockEvent"
+      required: [packsOpened, uniqueBlooks, totalBlookDefs, tokensSpent, tokensEarned, messagesSent, rarityBreakdown, recentUnlocks]
+    AdminAiScanInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        instructions: { type: string, maxLength: 1000 }
+      required: [password]
+    DiscordLink:
+      type: object
+      properties:
+        url: { type: string }
+      required: [url]
+    AdminDiscordLinkInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        url: { type: string, maxLength: 300 }
+      required: [password, url]
+    AiFlaggedItem:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [username, player, clan, chat_message, clan_message, trade_message]
+        id: { type: string }
+        label: { type: string }
+        text: { type: string }
+        reason: { type: string }
+        action: { type: string }
+        punishment:
+          type: string
+          enum: [ban, rename, delete]
+      required: [kind, id, label, text, reason, action]
+    AdminAiScanResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiFlaggedItem"
+        scannedPlayers: { type: integer }
+        scannedClans: { type: integer }
+        scannedMessages: { type: integer }
+      required: [items, scannedPlayers, scannedClans, scannedMessages]
+    AdminAiApplyInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+                enum: [username, player, ban_player, clan, chat_message, clan_message, trade_message]
+              id: { type: string }
+            required: [kind, id]
+      required: [password, items]
+    AdminAiApplyResult:
+      type: object
+      properties:
+        applied: { type: integer }
+        details:
+          type: array
+          items: { type: string }
+      required: [applied, details]
+    OwnerPasswordInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+      required: [password]
+    OwnerSettings:
+      type: object
+      properties:
+        adminPanelDisabled: { type: boolean }
+        linksAllowed: { type: boolean }
+        panelApprovalEnabled: { type: boolean }
+        topPackEnabled: { type: boolean }
+        updateMessageEnabled: { type: boolean }
+        extravextrasBaseLevel3Enabled: { type: boolean }
+      required: [adminPanelDisabled, linksAllowed, panelApprovalEnabled, topPackEnabled, updateMessageEnabled, extravextrasBaseLevel3Enabled]
+    OwnerSettingsSetInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        adminPanelDisabled: { type: boolean }
+        linksAllowed: { type: boolean }
+        panelApprovalEnabled: { type: boolean }
+        topPackEnabled: { type: boolean }
+        updateMessageEnabled: { type: boolean }
+        extravextrasBaseLevel3Enabled: { type: boolean }
+      required: [password]
+    OwnerPackOrder:
+      type: object
+      properties:
+        order:
+          type: array
+          items: { type: string }
+      required: [order]
+    OwnerPackOrderSetInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        order:
+          type: array
+          items: { type: string, minLength: 1 }
+      required: [password, order]
+    UpdateMessageStatus:
+      type: object
+      properties:
+        enabled: { type: boolean }
+      required: [enabled]
+    OwnerClanInfo:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        level: { type: integer }
+        experience: { type: integer }
+        members: { type: integer }
+      required: [id, name, level, experience, members]
+    OwnerClanList:
+      type: object
+      properties:
+        clans:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerClanInfo"
+      required: [clans]
+    OwnerPurchaseInfo:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: ["string", "null"] }
+        productKey: { type: string }
+        createdAt: { type: string }
+      required: [id, username, productKey, createdAt]
+    OwnerPurchaseList:
+      type: object
+      properties:
+        purchases:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerPurchaseInfo"
+      required: [purchases]
+    OwnerPanelAccessSetInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+        panel: { type: string, enum: [admin, mod, coowner, owner] }
+        granted: { type: boolean }
+      required: [password, username, panel, granted]
+    OwnerUnlockAccountInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+      required: [password, username]
+    OwnerPanelAccount:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        panels:
+          type: array
+          items: { type: string, enum: [admin, mod, coowner, owner] }
+      required: [id, username, panels]
+    OwnerPanelAccessList:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerPanelAccount"
+      required: [accounts]
+    AdminIpBanInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+      required: [password, username]
+    AdminIpUnbanInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+      required: [password, username]
+    AdminIpBanSharedAccount:
+      type: object
+      properties:
+        username: { type: string }
+        banned: { type: boolean }
+      required: [username, banned]
+    AdminIpBanInfo:
+      type: object
+      properties:
+        id: { type: integer }
+        # Null unless the owner password was used — mods never see raw IPs.
+        ip: { type: string, nullable: true }
+        bannedUsername: { type: string }
+        createdAt: { type: string, format: date-time }
+        sharedAccounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminIpBanSharedAccount"
+      required: [id, ip, bannedUsername, createdAt, sharedAccounts]
+    AdminIpBanList:
+      type: object
+      properties:
+        bans:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminIpBanInfo"
+      required: [bans]
+    OwnerModBadgeSetInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+        approved: { type: boolean }
+      required: [password, username, approved]
+    OwnerModBadgeAccount:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        modPanel: { type: boolean }
+      required: [id, username, modPanel]
+    OwnerModBadgeList:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerModBadgeAccount"
+      required: [accounts]
+    OwnerSetPfpInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+        # Object path returned by the storage upload flow (or a Google
+        # Storage URL from the uploader) — normalized server-side.
+        imagePath: { type: string, minLength: 1, maxLength: 2000 }
+      required: [password, username, imagePath]
+    OwnerRemovePfpInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1, maxLength: 40 }
+      required: [password, username]
+    OwnerPfpResult:
+      type: object
+      properties:
+        ok: { type: boolean }
+        avatarImage: { type: ["string", "null"] }
+      required: [ok, avatarImage]
+    OwnerSetClanLevelInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        clanId: { type: integer }
+        # Cap keeps 100*(level-1)^2 safely inside the int4 experience column.
+        level: { type: integer, minimum: 1, maximum: 4000 }
+      required: [password, clanId, level]
+    OnlineCount:
+      type: object
+      properties:
+        online: { type: integer }
+      required: [online]
+    ModClanInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        clanName: { type: string, minLength: 1 }
+      required: [password, clanName]
+    ModClanInfo:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        color: { type: string }
+        memberCount: { type: integer }
+        ownerUsername: { type: string }
+        experience: { type: integer }
+        banned: { type: boolean }
+      required: [id, name, color, memberCount, ownerUsername, experience, banned]
+    ModClanBanResult:
+      type: object
+      properties:
+        name: { type: string }
+        banned: { type: boolean }
+      required: [name, banned]
+    ModPasswordInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+      required: [password]
+    ModListPullsInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        blook: { type: string, description: "Only pulls of this blook" }
+        pack: { type: string, description: "Only pulls from this pack" }
+      required: [password]
+    ModListCraftsInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        blook: { type: string, description: "Only crafts that produced this blook" }
+      required: [password]
+    ModCraft:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        inputs:
+          type: array
+          items: { type: string }
+          description: "Blooks consumed by the craft"
+        result: { type: string }
+        rarity: { type: string, description: "Rarity of the result blook" }
+        image: { type: string, description: "Image of the result blook" }
+        usedLuck: { type: boolean }
+        createdAt: { type: string }
+      required: [id, username, inputs, result, rarity, image, usedLuck, createdAt]
+    ModCraftsResult:
+      type: object
+      properties:
+        crafts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModCraft"
+        totalCount: { type: integer, description: "All-time number of crafts matching the filter" }
+      required: [crafts, totalCount]
+    ModPlayerInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+      required: [password, username]
+    ModDeletePlayerChatResult:
+      type: object
+      properties:
+        username: { type: string }
+        messagesDeleted: { type: integer }
+      required: [username, messagesDeleted]
+    ModPlayerSummary:
+      type: object
+      properties:
+        username: { type: string }
+        badges:
+          type: array
+          items: { type: string }
+        banned: { type: boolean }
+        muted: { type: boolean }
+        mutedUntil: { type: string, nullable: true }
+        isBot: { type: boolean }
+        createdAt: { type: string }
+        lastIp: { type: string, nullable: true }
+      required: [username, badges, banned, muted, mutedUntil, isBot, createdAt, lastIp]
+    ModLookupResult:
+      type: object
+      properties:
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModPlayerSummary"
+      required: [players]
+    ModBanResult:
+      type: object
+      properties:
+        username: { type: string }
+        banned: { type: boolean }
+      required: [username, banned]
+    ModSetVerifiedInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        verified: { type: boolean }
+      required: [password, username, verified]
+    ModSetVerifiedResult:
+      type: object
+      properties:
+        username: { type: string }
+        badges:
+          type: array
+          items: { type: string }
+      required: [username, badges]
+    ModTradeSide:
+      type: object
+      properties:
+        username: { type: string }
+        offer:
+          $ref: "#/components/schemas/TradeOffer"
+        accepted: { type: boolean }
+      required: [username, offer, accepted]
+    ModTradeMessage:
+      type: object
+      properties:
+        username: { type: string }
+        content: { type: string }
+        createdAt: { type: string }
+      required: [username, content, createdAt]
+    ModTrade:
+      type: object
+      properties:
+        id: { type: integer }
+        status: { type: string }
+        sideA:
+          $ref: "#/components/schemas/ModTradeSide"
+        sideB:
+          $ref: "#/components/schemas/ModTradeSide"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModTradeMessage"
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, status, sideA, sideB, messages, createdAt, updatedAt]
+    ModPull:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        blook: { type: string }
+        rarity: { type: string }
+        image: { type: string }
+        pack: { type: string }
+        createdAt: { type: string }
+      required: [id, username, blook, rarity, image, pack, createdAt]
+    ModPullsResult:
+      type: object
+      properties:
+        pulls:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModPull"
+        totalCount: { type: integer, description: "All-time number of pulls matching the filter" }
+      required: [pulls, totalCount]
+    ModTradesResult:
+      type: object
+      properties:
+        trades:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModTrade"
+      required: [trades]
+    ModSetBadgeInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        badge:
+          type: string
+          enum: [Verified, OG]
+        granted: { type: boolean }
+      required: [password, username, badge, granted]
+    ModChatMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        content: { type: string }
+        createdAt: { type: string }
+      required: [id, username, content, createdAt]
+    ModChatResult:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModChatMessage"
+      required: [messages]
+    ModDeleteMessageInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        messageId: { type: integer, minimum: 1 }
+      required: [password, messageId]
+    ModDeleteMessageResult:
+      type: object
+      properties:
+        deleted: { type: boolean }
+        messageId: { type: integer }
+      required: [deleted, messageId]
+    ModSetMutedInput:
+      type: object
+      properties:
+        password: { type: string, minLength: 1 }
+        username: { type: string, minLength: 1 }
+        muted: { type: boolean }
+        minutes: { type: integer, minimum: 1, maximum: 10080 }
+      required: [password, username, muted]
+    ModSetMutedResult:
+      type: object
+      properties:
+        username: { type: string }
+        muted: { type: boolean }
+        mutedUntil: { type: string, nullable: true }
+      required: [username, muted, mutedUntil]

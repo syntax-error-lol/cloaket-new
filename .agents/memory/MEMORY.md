@@ -1,0 +1,25 @@
+- [Multiplayer trades & Clerk auth](multiplayer-trades.md) — viewer-relative trade sides, bot-gating, ended_at grace window, race-safe conditional updates, blur-to-commit offers, manual DDL over drizzle push.
+- [Game content resets](game-content-resets.md) — catalog rewrites need prod cleanup of orphaned owned_blooks/unlocks/listings after publish; bracket-depth splicing for blacketData edits; Collector badge sync must be one atomic UPDATE with catalog+quantity filters.
+- [Clans & chat rewards](clans-chat-rewards.md) — application/join atomicity, paced chat rewards, clan tags on ChatMessage, manual-DDL indexes in prod, banned-clan self-exit (my-membership + owner disband).
+- [Stripe store](stripe-store.md) — connection key is `settings.secret`, explicit product/price backfill needed, claim must bind productKey+amount, one-per-player unique constraint.
+- [AI moderation scan](ai-moderation-scan.md) — provider content_filter 400s on hateful prompts; bisect + auto-flag fallback; p:/u:/c: token action semantics.
+- [Owner panel](owner-panel.md) — co-owner = owner tier minus pack order & 1k re-enable; app_settings kill-switches, per-panel approval, custom pfps; blookgen approval stays admin-only.
+- [Auth session resilience](auth-session-resilience.md) — only 401 = logged out; prod XFF 2 hops; DB-backed login lockout + versioned session cookies: every password-setting path must bump the version & share loginGuard.
+- [Pack pulls live feed](pack-pulls.md) — every pack open logged permanently to pack_pulls; player-deletion flows must delete their pulls (FK); prod schema via Publish diff, no manual DDL.
+- [Craft system](craft-system.md) — combo-seeded deterministic outcomes, band-capped fallbacks, bundle-only 2.5x luck item, race-safe consumption, generation-tagged previews.
+- [Blook image quirks](blook-images.md) — 105 blooks have baked-in card art (leave them); glows drop-shadow not box-shadow; bump ?v= after edits; IM gray-canvas trap → PNG32: intermediates.
+- [Negative token prevention](negative-tokens.md) — all spends must be conditional UPDATEs (tokens >= amount) in-transaction; startup sweep heals negatives; don't add CHECK until prod healed.
+- [Discord bot bridge](discord-bot.md) — single-leader lease in app_settings (N autoscale instances = N gateway sessions = N× every message); webhook bridge, shared openPackForPlayer, login rate limit.
+- [Friends & DM inbox](friends-dms.md) — pair-unique functional index needs manual prod DDL after publish; gift claim+grant must share one transaction; deletion flows must clear both tables.
+- [Presence tracking](presence-tracking.md) — players.last_seen_at updated (throttled, race-safe WHERE) in auth middleware; admin online = seen <5min; prod needs the manual DDL after publish.
+- [Pack-open auto-opener guard](pack-open-guard.md) — in-memory concurrency lock + 60/min window + strike timeout on web pack opens; Discord path bypasses; per-process state.
+- [Miscellaneous hidden pack](misc-pack.md) — grant-only blooks (chance 0) must be excluded from every reward pool, Discord list, and /165 denominator; numerators may overshoot.
+- [1k gamble pack (ex-"Top")](top-pack.md) — renamed without re-release: fixed app_settings keys, displayPackName for legacy rows, IN('1k','Top') filters; supply claimed transactionally, nullable open results, kill-switch + sell-out.
+- [IP bans](ip-bans.md) — mod/admin/owner can ban-unban by username, raw IPs owner-only; blocks new signups from banned IPs only (shared school IPs protected); per-IP advisory lock between register and ban.
+- [Admin grant approvals](admin-grant-approvals.md) — blooks and Starter Bundles are owner-approved, race-safe requests; Mod grants stay immediate with badge and panel access.
+- [OpenAPI URI compatibility](openapi-uri-compatibility.md) — this workspace’s Zod generator cannot emit OpenAPI `format: uri`; validate URL semantics at the API boundary instead.
+- [Base progression](base-progression.md) — settle at the prior rate before any rate change; rate table duplicated client-side; Base has no pack-luck perk (moved to clan-held Uncommons Aug 2026).
+- [Clan held effects](clan-held-effects.md) — real server hook per effect; mine pay auto-deposited by 5-min sweep; Uncommon charm stacks per copy (+0.001x each, zero mine pay), auras never stack; owner kill-switches ride OwnerSettings.
+- [Request hygiene & chat speed](client-request-hygiene.md) — scoped mutation invalidation + self-polling skip list; optimistic chat send outside the query cache; server 1s shared chat cache, isMine mapped per viewer.
+- [Drizzle quirks](drizzle-select-subqueries.md) — subquery fields in multi-column select() return undefined (db.execute+aliases, verify by curl); JS arrays in sql`` become tuples — pass '{1,2}' literals.
+- [Signup flood guards](signup-flood-guards.md) — per-instance in-memory limiters can't stop floods; DB-backed global breaker + per-IP cap under the IP advisory lock; CORS allowlist, never origin:true.

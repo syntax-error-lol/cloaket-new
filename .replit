@@ -1,0 +1,34 @@
+modules = ["nodejs-20", "python-3.12", "web"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[nix]
+channel = "stable-25_05"
+packages = ["imagemagick"]
+
+[userenv]
+
+[userenv.development]
+
+[userenv.production]
+TRUST_PROXY_HOPS = "2"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-82c3a189-252e-44e3-9510-55e776c38435"

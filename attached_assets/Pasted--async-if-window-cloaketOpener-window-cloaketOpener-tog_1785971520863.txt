@@ -1,0 +1,391 @@
+(async () => {
+  if (window.__cloaketOpener) { window.__cloaketOpener.toggle(); return; }
+
+  const ORIGIN = 'https://cloaket.com';
+  const state = {
+    packs: [],
+    rarities: {},
+    running: false,
+    stop: false,
+    pulls: [],
+    startedAt: 0,
+    completed: 0,
+    errors: 0,
+  };
+
+  const el = (t, p = {}, ...c) => {
+    const e = document.createElement(t);
+    Object.assign(e, p);
+    if (p.style) Object.assign(e.style, p.style);
+    for (const x of c) e.append(x?.nodeType ? x : document.createTextNode(x));
+    return e;
+  };
+
+  // Root shadow DOM to avoid style bleed
+  const host = document.createElement('div');
+  host.id = 'cloaket-opener-host';
+  host.style.cssText = 'position:fixed;z-index:2147483647;top:16px;right:16px;';
+  document.documentElement.appendChild(host);
+  const root = host.attachShadow({ mode: 'open' });
+
+  const style = document.createElement('style');
+  style.textContent = `
+    :host, * { box-sizing: border-box; }
+    .panel {
+      width: 420px; max-height: 82vh; display: flex; flex-direction: column;
+      background: #0d1117; color: #e6edf3; border: 1px solid #30363d;
+      border-radius: 14px; font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      overflow: hidden; backdrop-filter: blur(8px);
+    }
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 14px; background: linear-gradient(180deg,#161b22,#0d1117);
+      border-bottom: 1px solid #30363d; cursor: grab; user-select:none;
+    }
+    .title { font-weight: 800; letter-spacing: .04em; font-size: 12px; }
+    .title span { color: #7ee787; }
+    .close, .min { background: transparent; color:#8b949e; border: 0;
+      cursor:pointer; padding: 2px 6px; font-size: 14px; }
+    .close:hover, .min:hover { color: #f85149; }
+    .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+    .row { display:flex; gap: 8px; align-items: center; }
+    .row > * { flex: 1; }
+    label { font-size: 10px; text-transform: uppercase; letter-spacing:.08em; color:#8b949e; }
+    select, input {
+      background: #161b22; color: #e6edf3; border: 1px solid #30363d;
+      border-radius: 8px; padding: 7px 9px; font: inherit; width:100%;
+    }
+    select:focus, input:focus { outline: 2px solid #58a6ff; outline-offset: 0; }
+    button.primary {
+      background: #238636; color: white; border: 0; border-radius: 8px;
+      padding: 9px 14px; font-weight: 700; cursor: pointer; letter-spacing:.03em;
+    }
+    button.primary:hover { background: #2ea043; }
+    button.primary[disabled] { background:#30363d; color:#8b949e; cursor:not-allowed; }
+    button.danger { background:#da3633; }
+    button.danger:hover { background:#f85149; }
+    .stats {
+      display:grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+      background:#161b22; border:1px solid #30363d; border-radius: 8px;
+      padding: 8px;
+    }
+    .stat { text-align:center; }
+    .stat .k { font-size: 9px; color:#8b949e; text-transform: uppercase; letter-spacing:.08em;}
+    .stat .v { font-size: 15px; font-weight: 800; color:#e6edf3; }
+    .progress {
+      height: 6px; background:#161b22; border:1px solid #30363d; border-radius: 999px; overflow:hidden;
+    }
+    .bar { height:100%; background: linear-gradient(90deg,#7ee787,#58a6ff); width:0%; transition: width .1s; }
+    .log {
+      flex: 1; min-height: 0; overflow: auto; background:#010409;
+      border: 1px solid #30363d; border-radius: 8px; padding: 6px 8px;
+      font-size: 11.5px; line-height: 1.55; max-height: 300px;
+    }
+    .log .line { display:flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
+    .log .name { color: #e6edf3; font-weight: 700; }
+    .log .ts { color: #6e7681; font-size: 10.5px; }
+    .rarity { padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+    .footer { display:flex; gap: 6px; padding: 8px 14px; border-top: 1px solid #30363d; background:#0d1117; }
+    .footer button {
+      background:#161b22; color:#e6edf3; border:1px solid #30363d;
+      border-radius: 7px; padding: 6px 10px; cursor:pointer; font: inherit;
+    }
+    .footer button:hover { border-color:#58a6ff; color:#58a6ff; }
+    .breakdown { display:flex; flex-wrap:wrap; gap:4px; font-size:10px; }
+    .breakdown .chip { padding: 2px 7px; border-radius: 999px; font-weight:700; }
+    .empty { color:#6e7681; text-align:center; padding: 24px 8px; font-style: italic; }
+    .err { color:#f85149; font-size: 11px; }
+  `;
+  root.appendChild(style);
+
+  const panel = el('div'); panel.className = 'panel';
+  root.appendChild(panel);
+
+  const header = el('div'); header.className = 'header';
+  header.innerHTML = '<div class="title">CLOAKET <span>PACK OPENER</span></div>';
+  const closeBtn = el('button', { textContent: '✕' }); closeBtn.className = 'close';
+  header.appendChild(closeBtn);
+  panel.appendChild(header);
+
+  const body = el('div'); body.className = 'body';
+  panel.appendChild(body);
+
+  // pack + count
+  const packWrap = el('div');
+  packWrap.innerHTML = '<label>Pack</label>';
+  const packSel = el('select'); packSel.disabled = true;
+  packSel.append(el('option', { textContent: 'Loading packs…', value: '' }));
+  packWrap.appendChild(packSel);
+
+  const countWrap = el('div');
+  countWrap.innerHTML = '<label>Count</label>';
+  const countIn = el('input', { type: 'number', value: '10', min: '1', max: '10000' });
+  countWrap.appendChild(countIn);
+
+  const concWrap = el('div');
+  concWrap.innerHTML = '<label>Parallel</label>';
+  const concIn = el('input', { type: 'number', value: '4', min: '1', max: '16' });
+  concWrap.appendChild(concIn);
+
+  const row1 = el('div'); row1.className = 'row';
+  row1.append(packWrap, countWrap, concWrap);
+  body.appendChild(row1);
+
+  const actions = el('div'); actions.className = 'row';
+  const runBtn = el('button', { textContent: 'OPEN PACKS' }); runBtn.className = 'primary';
+  runBtn.disabled = true;
+  const clearBtn = el('button', { textContent: 'CLEAR LOG' }); clearBtn.className = 'primary';
+  clearBtn.style.background = '#30363d'; clearBtn.style.color = '#e6edf3';
+  actions.append(runBtn, clearBtn);
+  body.appendChild(actions);
+
+  // progress
+  const progress = el('div'); progress.className = 'progress';
+  const bar = el('div'); bar.className = 'bar'; progress.appendChild(bar);
+  body.appendChild(progress);
+
+  // stats
+  const stats = el('div'); stats.className = 'stats';
+  const mkStat = (k) => { const s = el('div'); s.className = 'stat';
+    s.innerHTML = '<div class="k">'+k+'</div><div class="v" data-v>0</div>'; return s; };
+  const sTotal = mkStat('opened');
+  const sRate = mkStat('per sec');
+  const sBest = mkStat('best');
+  const sErr = mkStat('errors');
+  stats.append(sTotal, sRate, sBest, sErr);
+  body.appendChild(stats);
+
+  const breakdown = el('div'); breakdown.className = 'breakdown';
+  body.appendChild(breakdown);
+
+  const log = el('div'); log.className = 'log';
+  log.innerHTML = '<div class="empty">No pulls yet. Choose a pack and hit OPEN.</div>';
+  body.appendChild(log);
+
+  const footer = el('div'); footer.className = 'footer';
+  const csvBtn = el('button', { textContent: 'Export CSV' });
+  const jsonBtn = el('button', { textContent: 'Copy JSON' });
+  const minBtn = el('button', { textContent: 'Minimize' });
+  footer.append(csvBtn, jsonBtn, minBtn);
+  panel.appendChild(footer);
+
+  // Draggable
+  let dx=0, dy=0, dragging=false;
+  header.addEventListener('mousedown', (e)=>{ if(e.target===closeBtn) return; dragging=true;
+    const r = host.getBoundingClientRect(); dx = e.clientX - r.left; dy = e.clientY - r.top;
+    header.style.cursor='grabbing'; e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e)=>{ if(!dragging) return;
+    host.style.left = (e.clientX - dx) + 'px';
+    host.style.top = (e.clientY - dy) + 'px';
+    host.style.right = 'auto';
+  });
+  window.addEventListener('mouseup', ()=>{ dragging=false; header.style.cursor='grab'; });
+
+  closeBtn.onclick = () => host.remove();
+  minBtn.onclick = () => { body.style.display = body.style.display === 'none' ? 'flex' : 'none';
+    footer.style.display = footer.style.display === 'none' ? 'flex' : 'none';
+  };
+
+  // Colors used for rarities (fallback if API doesn't tell us)
+  const RARITY_FALLBACK = {
+    Common:'#9e9e9e', Uncommon:'#26a269', Rare:'#3584e4',
+    Epic:'#9141ac', Legendary:'#e5a50a', Mythical:'#e01b24',
+    Chroma:'#ff6bcb', Mystical:'#00d4ff', Unique:'#ffd166',
+    Iridescent:'#c8b6ff', Supreme:'#ffea00'
+  };
+  const rarityColor = (name) => state.rarities[name]?.color || RARITY_FALLBACK[name] || '#8b949e';
+
+  // Load packs + rarities
+  const api = async (path, opts={}) => {
+    const r = await fetch(ORIGIN + path, { credentials: 'include', ...opts });
+    if (!r.ok) {
+      let msg = 'HTTP ' + r.status;
+      try { const j = await r.json(); if (j?.message) msg = j.message; } catch {}
+      const e = new Error(msg); e.status = r.status; throw e;
+    }
+    return r.json();
+  };
+
+  try {
+    const [packs, rarities] = await Promise.all([
+      api('/api/packs'),
+      api('/api/rarities').catch(()=>[]),
+    ]);
+    state.packs = Array.isArray(packs) ? packs : (packs.packs || []);
+    const rArr = Array.isArray(rarities) ? rarities : (rarities.rarities || []);
+    for (const r of rArr) state.rarities[r.name] = r;
+
+    packSel.innerHTML = '';
+    for (const p of state.packs) {
+      const name = p.name || p;
+      packSel.append(el('option', { value: name, textContent: name + (p.price != null ? ' — ' + p.price + ' tokens' : '') }));
+    }
+    // Default to Space if present
+    const spaceOpt = [...packSel.options].find(o => /space/i.test(o.value));
+    if (spaceOpt) packSel.value = spaceOpt.value;
+    packSel.disabled = false;
+    runBtn.disabled = false;
+  } catch (err) {
+    packSel.innerHTML = '';
+    packSel.append(el('option', { value: '', textContent: 'Failed: ' + err.message }));
+    if (err.status === 401) {
+      const e = el('div'); e.className = 'err';
+      e.textContent = 'Not logged in. Sign in at cloaket.com then re-run.';
+      body.insertBefore(e, actions);
+    }
+  }
+
+  const rarityCounts = {};
+  const rarityChips = {};
+
+  const renderStats = () => {
+    sTotal.querySelector('[data-v]').textContent = state.completed;
+    sErr.querySelector('[data-v]').textContent = state.errors;
+    const elapsed = (Date.now() - state.startedAt) / 1000;
+    const rate = elapsed > 0.05 ? (state.completed / elapsed).toFixed(1) : '—';
+    sRate.querySelector('[data-v]').textContent = rate;
+    let best = '—', bestRank = -1;
+    const order = ['Common','Uncommon','Rare','Epic','Legendary','Mythical','Chroma','Unique','Mystical','Iridescent','Supreme'];
+    for (const p of state.pulls) {
+      const idx = order.indexOf(p.rarity);
+      if (idx > bestRank) { bestRank = idx; best = p.rarity; }
+    }
+    sBest.querySelector('[data-v]').textContent = best;
+    sBest.querySelector('[data-v]').style.color = best === '—' ? '#e6edf3' : rarityColor(best);
+
+    // breakdown
+    for (const [r, c] of Object.entries(rarityCounts)) {
+      if (!rarityChips[r]) {
+        const chip = el('span'); chip.className = 'chip';
+        chip.style.background = rarityColor(r) + '22';
+        chip.style.color = rarityColor(r);
+        chip.style.border = '1px solid ' + rarityColor(r) + '55';
+        rarityChips[r] = chip;
+        breakdown.appendChild(chip);
+      }
+      rarityChips[r].textContent = r + ' ' + c;
+    }
+  };
+
+  const addLine = (pull) => {
+    if (log.querySelector('.empty')) log.innerHTML = '';
+    const line = el('div'); line.className = 'line';
+    const left = el('div');
+    const rSpan = el('span'); rSpan.className = 'rarity';
+    rSpan.textContent = pull.rarity;
+    rSpan.style.background = rarityColor(pull.rarity) + '22';
+    rSpan.style.color = rarityColor(pull.rarity);
+    rSpan.style.border = '1px solid ' + rarityColor(pull.rarity) + '77';
+    const n = el('span'); n.className = 'name'; n.textContent = ' ' + pull.name;
+    left.append(rSpan, n);
+    const ts = el('span'); ts.className = 'ts';
+    const d = new Date(pull.ts);
+    ts.textContent = d.toLocaleTimeString();
+    line.append(left, ts);
+    log.prepend(line);
+    // cap DOM lines for perf, but keep all in memory
+    if (log.childElementCount > 500) log.lastChild.remove();
+  };
+
+  clearBtn.onclick = () => {
+    state.pulls = []; state.completed = 0; state.errors = 0;
+    for (const k of Object.keys(rarityCounts)) delete rarityCounts[k];
+    for (const c of Object.values(rarityChips)) c.remove();
+    for (const k of Object.keys(rarityChips)) delete rarityChips[k];
+    bar.style.width = '0%';
+    log.innerHTML = '<div class="empty">No pulls yet.</div>';
+    renderStats();
+  };
+
+  const openOne = async (packName) => {
+    const r = await fetch(ORIGIN + '/api/packs/' + encodeURIComponent(packName) + '/open',
+      { method: 'POST', credentials: 'include' });
+    if (!r.ok) {
+      let msg = 'HTTP ' + r.status;
+      try { const j = await r.json(); if (j?.message) msg = j.message; } catch {}
+      const e = new Error(msg); e.status = r.status; throw e;
+    }
+    return r.json();
+  };
+
+  const setRunning = (v) => {
+    state.running = v;
+    runBtn.textContent = v ? 'STOP' : 'OPEN PACKS';
+    runBtn.classList.toggle('danger', v);
+    packSel.disabled = v; countIn.disabled = v; concIn.disabled = v;
+  };
+
+  runBtn.onclick = async () => {
+    if (state.running) { state.stop = true; return; }
+    const packName = packSel.value;
+    const total = Math.max(1, Math.min(10000, parseInt(countIn.value) || 1));
+    const conc = Math.max(1, Math.min(16, parseInt(concIn.value) || 4));
+    if (!packName) return;
+
+    state.stop = false;
+    state.startedAt = Date.now();
+    let launched = 0, done = 0;
+    setRunning(true);
+
+    const worker = async () => {
+      while (!state.stop && launched < total) {
+        const my = launched++;
+        try {
+          const res = await openOne(packName);
+          const b = res.blook || res;
+          const pull = {
+            name: b.name || 'Unknown',
+            rarity: b.rarity || 'Unknown',
+            image: b.image || null,
+            ts: Date.now(),
+            index: my + 1,
+          };
+          state.pulls.push(pull);
+          rarityCounts[pull.rarity] = (rarityCounts[pull.rarity] || 0) + 1;
+          state.completed++;
+          addLine(pull);
+        } catch (err) {
+          state.errors++;
+          if (err.status === 429) { await new Promise(r=>setTimeout(r,600)); }
+          else if (err.status === 400 || err.status === 402 || err.status === 403) {
+            state.stop = true; // likely out of tokens or forbidden
+            const e = el('div'); e.className='err'; e.textContent = 'Stopped: ' + err.message;
+            body.insertBefore(e, log); setTimeout(()=>e.remove(), 4000);
+          }
+          if (log.querySelector('.empty')) log.innerHTML='';
+          const line = el('div'); line.className='line';
+          const l = el('span'); l.className='err'; l.textContent='error: ' + err.message;
+          const t = el('span'); t.className='ts'; t.textContent = new Date().toLocaleTimeString();
+          line.append(l, t); log.prepend(line);
+        } finally {
+          done++;
+          bar.style.width = Math.min(100, (done / total) * 100) + '%';
+          renderStats();
+        }
+      }
+    };
+
+    const workers = Array.from({length: conc}, () => worker());
+    await Promise.all(workers);
+    setRunning(false);
+  };
+
+  csvBtn.onclick = () => {
+    const rows = [['index','name','rarity','timestamp_iso','timestamp_ms']];
+    for (const p of state.pulls) rows.push([p.index, p.name, p.rarity, new Date(p.ts).toISOString(), p.ts]);
+    const csv = rows
+  .map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(','))
+  .join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'cloaket-pulls-' + Date.now() + '.csv'; a.click();
+  };
+  jsonBtn.onclick = async () => {
+    await navigator.clipboard.writeText(JSON.stringify(state.pulls, null, 2));
+    jsonBtn.textContent = 'Copied!'; setTimeout(()=>jsonBtn.textContent='Copy JSON', 1500);
+  };
+
+  window.__cloaketOpener = { toggle: () => host.style.display = host.style.display === 'none' ? 'block' : 'none' };
+})();

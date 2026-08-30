@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">
+  <defs>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b678ff" />
+      <stop offset="100%" stop-color="#6b3be3" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <text x="200" y="85" font-family="'Titan One', system-ui, sans-serif" font-size="80" font-weight="900" text-anchor="middle" fill="url(#textGrad)" filter="url(#glow)">
+    Cloaket
+  </text>
+  <circle cx="340" cy="30" r="10" fill="#facc15" filter="url(#glow)" />
+  <path d="M335,25 L345,35 M335,35 L345,25" stroke="#422006" stroke-width="3" stroke-linecap="round" />
+</svg>

@@ -1,0 +1,43 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "gLzTZ_cY6bb8pAQeiV70z"
+uri = "file://artifacts/api-server/public/content/blooks/Mega%20Bot.webp"
+type = "image"
+title = "New Mega Bot"
+
+[[outputs]]
+id = "po5K0jRuOKHmLBETVF1Bc"
+uri = "file://attached_assets/generated/1k-animated.gif"
+type = "image"
+title = "1k — animated"
+description = "The 1k button with the same diagonal shine sweep as the reference animation."
+
+[[outputs]]
+id = "Yz-tpqwWXJiYG71jTQ4H0"
+uri = "file://attached_assets/legends_blook_polished.png"
+type = "image"
+title = "Legends blook — polished v3"
+description = "Bottom edge cleaned up — the bumpy parts are cut off so it matches the top."
+
+[[outputs]]
+id = "c9Ea66Js6-4halfoOVpnI"
+uri = "file://attached_assets/legends_blook_animated.gif"
+type = "image"
+title = "Legends blook — animated v4"
+description = "Same bounce + soft color shimmer with the cleaned-up bottom."
+
+[[outputs]]
+id = "Ht-iL-aH3-IEHRmellxxu"
+uri = "file://attached_assets/cloaket_rainbow.gif"
+type = "image"
+title = "CLOAKET Rainbow Logo (GIF)"
+description = "Animated rainbow CLOAKET text in the game's Titan One font, transparent background, looping."
+
+[[outputs]]
+id = "FTxVZFlaRQxGEtD4gVli8"
+uri = "file://attached_assets/Fast%20Food%20Pack%20wrapper.png"
+type = "image"
+title = "Fast Food Pack wrapper (previous version)"
+description = "Reverted to the earlier version, before the last banner/checker changes."
