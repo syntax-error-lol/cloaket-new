@@ -216,12 +216,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
+const server = app.listen(port, () => {
   logger.info({ port }, "Server listening");
 
   // Run Stripe setup in the background AFTER the server is up — a slow or
@@ -415,4 +410,9 @@ app.listen(port, (err) => {
   applyBundleUpgrades()
     .then((n) => logger.info({ upgraded: n }, "Bundle upgrade sweep done"))
     .catch((err) => logger.error({ err }, "Bundle upgrade sweep failed"));
+});
+
+server.on("error", (err) => {
+  logger.error({ err }, "Error listening on port");
+  process.exit(1);
 });
